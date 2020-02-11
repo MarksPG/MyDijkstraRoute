@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Common
 {
-    class Graph
+    public class Graph
     {
         public List<Node> Nodes { get; set; } = new List<Node>();
 

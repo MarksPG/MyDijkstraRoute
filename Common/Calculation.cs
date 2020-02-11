@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Common
 {
-    class Calculation
+    public class Calculation
     {
         public Graph Graph { get; set; }
 
@@ -16,8 +16,8 @@ namespace Common
 
         public int NodeVisits { get; private set; }
 
-        public List<Node> ShortestPath;
-        
+        //public List<Node> ShortestPath { get; set; }
+
         public double ShortestPathCost { get; private set; }
 
 
@@ -25,9 +25,9 @@ namespace Common
         {
             Graph = graph;
 
-            End = graph.StartNode;
+            End = graph.EndNode;
 
-            Start = graph.EndNode;
+            Start = graph.StartNode;
         }
 
 
@@ -38,6 +38,7 @@ namespace Common
             shortestPath.Add(End);
             BuildShortestPath(shortestPath, End);
             shortestPath.Reverse();
+            //ShortestPath = shortestPath;
             return shortestPath;
         }
 
@@ -58,7 +59,7 @@ namespace Common
                     var childNode = cnn.Destination;
                     if (childNode.Visited)
                         continue;
-                    if(childNode.MinCostToStart == null ||
+                    if (childNode.MinCostToStart == null ||
                         node.MinCostToStart + cnn.Cost < childNode.MinCostToStart)
                     {
                         childNode.MinCostToStart = node.MinCostToStart + cnn.Cost;
@@ -77,11 +78,11 @@ namespace Common
             if (node.NearestToStart == null)
                 return;
             list.Add(node.NearestToStart);
-            ShortestPathCost += node.Destinations.Single(x => x.Destination == node.NearestToStart).Cost;
+            //ShortestPathCost += node.Destinations.Single(x => x.Destination == node.NearestToStart).Cost;
             BuildShortestPath(list, node.NearestToStart);
         }
 
-        
+
     }
 
 }
