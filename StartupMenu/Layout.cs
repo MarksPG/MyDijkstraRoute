@@ -1,22 +1,22 @@
-﻿using Newtonsoft.Json;
-using Common;
+﻿using Calculation;
+using Layout_FrameMenu;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
-namespace MyDijkstraRoute
-{
 
-    class Program
+namespace StartupMenu
+{
+    public class Layout
     {
-        public static List<Node> UserNodes;
+        public Graph Graph { get; set; }
 
         const string NodeFilePath = @"C:\Windows\Temp\myDAG.json";
 
-        public static void Main()
+        public void Run()
         {
-
             while (true)
             {
                 string option = ShowMenu("What do you want to do?", new[] {
@@ -26,7 +26,7 @@ namespace MyDijkstraRoute
                         "Redefine node in existing DAG",
                         "Save existing DAG to file",
                         "Import new DAG from file",
-                        "Open map for view and calculation",
+                        "Check best route through calculation",
                         "Quit"
                     }); ;
                 Console.Clear();
@@ -37,64 +37,69 @@ namespace MyDijkstraRoute
                 else if (option == "Redefine node in existing DAG") AddOrRedefineNode();
                 else if (option == "Save existing DAG to file") SaveExistingDAG();
                 else if (option == "Import new DAG from file") ImportNewDAG();
-                else if (option == "Open map for view and calculation") OpenGraphForCalc();
+                else if (option == "Check best route through calculation") CheckBestRoute();
                 else Environment.Exit(0);
 
                 Console.WriteLine();
             }
         }
 
-        private static void OpenGraphForCalc()
+        private void CheckBestRoute()
         {
-            if (UserNodes == null || UserNodes.Count() == 0)
+
+            if (Graph.Nodes == null || Graph.Nodes.Count() == 0)
             {
                 Console.WriteLine("There is currently no existing DAG. You need to define a DAG or import a DAG from file!");
             }
             else
             {
-                Graph graph = new Graph
-                {
-                    Nodes = UserNodes
-                };
-
                 Console.WriteLine("Please enter a startNode");
                 string inputStartNode = Console.ReadLine();
                 Console.WriteLine("Please enter an endNode");
                 string inputEndNode = Console.ReadLine();
 
-                graph.StartNode = graph.Nodes.FirstOrDefault(x => x.Name == inputStartNode);
-                graph.EndNode = graph.Nodes.FirstOrDefault(x => x.Name == inputEndNode);
+                
 
-                Calculation calculation = new Calculation(graph);
+                var factory = new LayoutFactory(Graph);
+                var router = new Router(factory);
+                List<string> shortestPath = router.GetShortestPathDijkstra(inputStartNode, inputEndNode);
 
-                List<Node> shortestPath = calculation.GetShortestPathDijkstra();
-
-                Console.WriteLine($"Number of nodes visited: {calculation.NodeVisits}");
+                Console.WriteLine($"number of nodes visited: {router.NodeVisits}");
                 Console.WriteLine();
                 foreach (var item in shortestPath)
                 {
-                    Console.WriteLine($"{item.Name}");
+                    Console.WriteLine($"{item}");
                 }
             }
         }
 
-        private static void SeeAll()
+        private void SeeAll()
         {
-            if (UserNodes == null || UserNodes.Count() == 0)
+            if (Graph == null || Graph.Nodes.Count() == 0)
             {
                 Console.WriteLine("There is currently no existing DAG.");
             }
             else
             {
                 Console.WriteLine("Existing nodes in DAG:");
-                foreach (var item in UserNodes)
+                foreach (var item in Graph.Nodes)
                 {
                     Console.WriteLine($"{item.Name} - Number of edges: {item.Destinations.Length}");
                 }
             }
         }
-        private static void ManuallyCreateDAG()
+
+        private void ManuallyCreateDAG()
         {
+            Graph graph = new Graph()
+            {
+                Nodes = new List<Node>()
+            };
+
+            Console.WriteLine("Please, define a name for your new DAG:");
+            string dagNameInput = Console.ReadLine();
+            graph.Name = dagNameInput;
+
             List<Node> userNodes = new List<Node>();
 
             Console.WriteLine("Enter how many nodes: ");
@@ -110,7 +115,8 @@ namespace MyDijkstraRoute
                 node.Name = inputString;
                 userNodes.Add(node);
             }
-            UserNodes = userNodes;
+            graph.Nodes = userNodes;
+            Graph = graph;
 
 
             foreach (Node item in userNodes)
@@ -142,67 +148,73 @@ namespace MyDijkstraRoute
                     {
                         break;
                     }
-
                 }
                 item.Destinations = destinations;
             }
-            UserNodes = userNodes;
+            graph.Nodes = userNodes;
+            Graph = graph;
         }
-        private static void AddNewNode()
+
+        private void AddNewNode()
         {
-            List<Node> userNodes = UserNodes;
-
-            Console.Write("Name your node: ");
-            string nodeInput = Console.ReadLine();
-
-            if (nodeInput != string.Empty && !AllDefinedNodes().Contains(nodeInput))
+            try
             {
-                Node node = new Node() { };
-                Edge[] destinations = new Edge[0];
-                node.Name = nodeInput;
-                userNodes.Add(node);
+                List<Node> userNodes = Graph.Nodes;
+                Console.Write("Name your node: ");
+                string nodeInput = Console.ReadLine();
 
-                while (true)
+                if (nodeInput != string.Empty && !AllDefinedNodes().Contains(nodeInput))
                 {
-                    string costInput;
-                    Console.WriteLine($"Specify what node(s) {node.Name} connects to: ");
-                    string nodeToInput = Console.ReadLine();
+                    Node node = new Node() { };
+                    Edge[] destinations = new Edge[0];
+                    node.Name = nodeInput;
+                    userNodes.Add(node);
 
-                    if (nodeToInput != string.Empty && AllDefinedNodes().Contains(nodeToInput))
+                    while (true)
                     {
-                        Edge edge = new Edge() { };
-                        edge.Destination = userNodes.FirstOrDefault(x => x.Name == nodeToInput);
-                        Console.WriteLine($"Specify cost for the connection between {node.Name} and {nodeToInput}: ");
-                        costInput = Console.ReadLine();
-                        edge.Cost = Int32.Parse(costInput);
+                        string costInput;
+                        Console.WriteLine($"Specify what node(s) {node.Name} connects to: ");
+                        string nodeToInput = Console.ReadLine();
 
-                        destinations = destinations.Concat(new Edge[] { edge }).ToArray();
+                        if (nodeToInput != string.Empty && AllDefinedNodes().Contains(nodeToInput))
+                        {
+                            Edge edge = new Edge() { };
+                            edge.Destination = userNodes.FirstOrDefault(x => x.Name == nodeToInput);
+                            Console.WriteLine($"Specify cost for the connection between {node.Name} and {nodeToInput}: ");
+                            costInput = Console.ReadLine();
+                            edge.Cost = Int32.Parse(costInput);
 
+                            destinations = destinations.Concat(new Edge[] { edge }).ToArray();
+
+                        }
+                        else if (nodeToInput != string.Empty && !AllDefinedNodes().Contains(nodeToInput))
+                        {
+                            Console.WriteLine("Specified Node does not exist or nodename misspelled. Please check again");
+                        }
+                        else
+                        {
+                            break;
+                        }
+                        node.Destinations = destinations;
                     }
-                    else if (nodeToInput != string.Empty && !AllDefinedNodes().Contains(nodeToInput))
-                    {
-                        Console.WriteLine("Specified Node does not exist or nodename misspelled. Please check again");
-                    }
-                    else
-                    {
-                        break;
-                    }
-                    node.Destinations = destinations;
+                    Graph.Nodes = userNodes;
                 }
-                UserNodes = userNodes;
-
+                else if (AllDefinedNodes().Contains(nodeInput))
+                {
+                    Console.WriteLine("A node with that name already exists. Please, check that node or define a node with a new name.");
+                }
+                else { };
             }
-            else if (AllDefinedNodes().Contains(nodeInput))
+            catch
             {
-                Console.WriteLine("A node with that name already exists. Please, check that node or define a node with a new name.");
+                Console.WriteLine("There is currently no existing DAG. Please, create a new DAG manually or import one from file");
             }
-            else { };
 
         }
 
-        private static void AddOrRedefineNode()
+        private void AddOrRedefineNode()
         {
-            List<Node> userNodes = UserNodes;
+            List<Node> userNodes = Graph.Nodes;
             string nodeRedefinement = ShowMenu("Select actual node", AllDefinedNodes().ToArray());
 
             Node selectedNode = userNodes.FirstOrDefault(x => x.Name == nodeRedefinement);
@@ -223,15 +235,14 @@ namespace MyDijkstraRoute
             else if (selectedAction == $"Add new edge for {selectedNode.Name}") AddNewEdge(selectedNode);
             else { };
 
-
             Console.Clear();
         }
 
-        private static void AddNewEdge(Node selectedNode)
+        private void AddNewEdge(Node selectedNode)
         {
             Edge[] destinations = selectedNode.Destinations;
 
-            List<Node> userNodes = UserNodes;
+            List<Node> userNodes = Graph.Nodes;
 
             while (true)
             {
@@ -263,10 +274,10 @@ namespace MyDijkstraRoute
             selectedNode.Destinations = destinations;
         }
 
-        private static void ChangeEdgeValue(Node selectedNode)
+        private void ChangeEdgeValue(Node selectedNode)
         {
             Edge[] destinations = selectedNode.Destinations;
-            List<Node> userNodes = UserNodes;
+            List<Node> userNodes = Graph.Nodes;
 
             foreach (Edge edge in destinations)
             {
@@ -285,9 +296,6 @@ namespace MyDijkstraRoute
                     Console.WriteLine($"Specify new cost for the connection between {selectedNode.Name} and {nodeInput}: ");
                     string costInput = Console.ReadLine();
                     actualEdge.Cost = Int32.Parse(costInput);
-
-                    //destinations[Array.IndexOf(destinations,nodeInput)] = actualEdge;
-
                 }
                 else if (nodeInput != string.Empty && !AllDefinedNodes().Contains(nodeInput))
                 {
@@ -297,17 +305,20 @@ namespace MyDijkstraRoute
                 {
                     break;
                 }
-                //selectedNode.Destinations = destinations;
+                
             }
 
         }
 
-        private static void SaveExistingDAG()
+        private void SaveExistingDAG()
         {
             Dictionary<string, List<string>> userNodesToSave = new Dictionary<string, List<string>>();
+            Dictionary<string, Dictionary<string, List<string>>> userGraphToSave = new Dictionary<string, Dictionary<string, List<string>>>();
+            
+            Console.WriteLine("Please, set a name to the existing DAG: ");
+            string inputName = Console.ReadLine();
 
-
-            foreach (Node item in UserNodes)
+            foreach (Node item in Graph.Nodes)
             {
                 string nodeName = item.Name.ToString();
                 List<string> destinations = new List<string>();
@@ -319,38 +330,53 @@ namespace MyDijkstraRoute
                 }
                 userNodesToSave.Add(nodeName, destinations);
             }
+            userGraphToSave.Add(inputName, userNodesToSave);
 
             using (StreamWriter file = File.CreateText(NodeFilePath))
             {
                 JsonSerializer serializer = new JsonSerializer();
-                serializer.Serialize(file, userNodesToSave);
+                serializer.Serialize(file, userGraphToSave);
             }
 
             Console.WriteLine("Your DAG has been saved!");
             Console.WriteLine();
         }
-        private static void ImportNewDAG()
+
+        private void ImportNewDAG()
         {
-            if (UserNodes == null || UserNodes.Count() == 0)
+            if (Graph == null || Graph.Nodes.Count() == 0)
             {
                 GetImportedUserNodes();
             }
             else
             {
-                UserNodes.Clear();
+                Graph.Nodes.Clear();
                 GetImportedUserNodes();
             }
         }
 
-
-
-        private static void GetImportedUserNodes()
+        private void GetImportedUserNodes()
         {
-            List<Node> userNodes = new List<Node>();
+            Graph graph = new Graph()
+            {
+                Nodes = new List<Node>()
+            };
 
-            using StreamReader file = File.OpenText(NodeFilePath);
-            JsonSerializer serializer = new JsonSerializer();
-            Dictionary<string, List<string>> importedNodes = (Dictionary<string, List<string>>)serializer.Deserialize(file, typeof(Dictionary<string, List<string>>));
+            List<Node> userNodes = new List<Node>();
+            Dictionary<string, List<string>> importedNodes = new Dictionary<string, List<string>>();
+            Dictionary<string, Dictionary<string, List<string>>> importedGraph = new Dictionary<string, Dictionary<string, List<string>>>();
+
+            using (StreamReader file = File.OpenText(NodeFilePath))
+            {
+                JsonSerializer serializer = new JsonSerializer();
+                importedGraph = (Dictionary<string, Dictionary<string, List<string>>>)serializer.Deserialize(file, typeof(Dictionary<string, Dictionary<string, List<string>>>));
+            }
+
+            foreach (KeyValuePair<string, Dictionary<string, List<string>>> pair in importedGraph)
+            {
+                graph.Name = pair.Key;
+                importedNodes = pair.Value;
+            }
 
             foreach (KeyValuePair<string, List<string>> pair in importedNodes)
             {
@@ -376,16 +402,17 @@ namespace MyDijkstraRoute
                 }
                 node.Destinations = destinations;
             }
-            UserNodes = userNodes;
+            graph.Nodes = userNodes;
+            Graph = graph;
         }
 
-        private static List<string> AllDefinedNodes()
+        private List<string> AllDefinedNodes()
         {
             List<string> allDefinedNodes = new List<string>();
 
             try
             {
-                foreach (Node node in UserNodes)
+                foreach (Node node in Graph.Nodes)
                 {
                     allDefinedNodes.Add(node.Name);
                 }
@@ -398,7 +425,7 @@ namespace MyDijkstraRoute
             return allDefinedNodes;
         }
 
-        public static string ShowMenu(string prompt, string[] options)
+        public string ShowMenu(string prompt, string[] options)
         {
             Console.WriteLine(prompt);
 
