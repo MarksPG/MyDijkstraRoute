@@ -13,7 +13,10 @@ namespace StartupMenu
     {
         public Graph Graph { get; set; }
 
-        const string NodeFilePath = @"C:\Windows\Temp\myDAG.json";
+        private static readonly Random getrandom = new Random();
+
+        const string NodeFilePathIn = @"C:\Windows\Temp\01_Start.json";
+        const string NodeFilePathOut = @"C:\Windows\Temp\02_Slut.json";
 
         public void Run()
         {
@@ -21,27 +24,168 @@ namespace StartupMenu
             {
                 string option = ShowMenu("What do you want to do?", new[] {
                         "See all nodes and edges in existing DAG",
+                        "Automatically create a new DAG",
                         "Manually create a new DAG",
                         "Add new node in existing DAG",
                         "Redefine node in existing DAG",
                         "Save existing DAG to file",
                         "Import new DAG from file",
                         "Check best route through calculation",
+                        "Run iterative calculations through DAG",
+                        "Run performancetest",
                         "Quit"
                     }); ;
                 Console.Clear();
 
                 if (option == "See all nodes and edges in existing DAG") SeeAll();
+                else if (option == "Automatically create a new DAG") AutomaticallyCreateDAG();
                 else if (option == "Manually create a new DAG") ManuallyCreateDAG();
                 else if (option == "Add new node in existing DAG") AddNewNode();
                 else if (option == "Redefine node in existing DAG") AddOrRedefineNode();
                 else if (option == "Save existing DAG to file") SaveExistingDAG();
                 else if (option == "Import new DAG from file") ImportNewDAG();
                 else if (option == "Check best route through calculation") CheckBestRoute();
+                else if (option == "Run iterative calculations through DAG") RunIterative();
+                else if (option == "Run performancetest") RunPerformanceTest();
                 else Environment.Exit(0);
 
                 Console.WriteLine();
             }
+        }
+
+        private void RunPerformanceTest()
+        {
+            throw new NotImplementedException();
+        }
+
+        private void RunIterative()
+        {
+            if (Graph.Nodes == null || Graph.Nodes.Count() == 0)
+            {
+                Console.WriteLine("There is currently no existing DAG. You need to define a DAG or import a DAG from file!");
+            }
+            else
+            {
+                Console.WriteLine("Please enter a startNode");
+                string inputStartNode = Console.ReadLine();
+                Console.WriteLine("Please enter an endNode");
+                string inputEndNode = Console.ReadLine();
+                Console.WriteLine("Please enter number of iterations");
+                int inputIterationNumber = int.Parse(Console.ReadLine());
+
+                var factory = new LayoutFactory(Graph);
+                var router = new Router(factory);
+
+                FileStream filestream = new FileStream(@"C:\Windows\Temp\50_iterations.txt", FileMode.Create);
+                var streamwriter = new StreamWriter(filestream);
+                streamwriter.AutoFlush = true;
+
+
+                for (int i = 0; i < inputIterationNumber; i++)
+                {
+
+                    Console.SetOut(streamwriter);
+                    Console.SetError(streamwriter);
+
+                    List<string> shortestPath = router.GetShortestPathDijkstra(inputStartNode, inputEndNode);
+                    Console.WriteLine();
+                    Console.WriteLine($"Result from calculation #{i+1}");
+                    Console.WriteLine();
+                    Console.WriteLine($"Number of nodes visited: {router.NodeVisits}");
+                    Console.WriteLine();
+                    Console.WriteLine($"Shortest path Cost: {router.ShortestPathCost}");
+                    Console.WriteLine();
+
+                    foreach (var item in shortestPath)
+                    {
+                        Console.WriteLine($"{item}");
+                    }
+
+                    IncreaseEdgeByIncrement(shortestPath);
+                }
+                streamwriter.AutoFlush = false;
+                SaveExistingDAG();
+                streamwriter.Dispose();
+                filestream.Dispose();
+                
+            }
+        }
+
+        private void IncreaseEdgeByIncrement(List<string> shortestPath)
+        {
+            List<Node> resultRoute = new List<Node>();
+
+            foreach (string nodeName in shortestPath)
+            {
+                Node node = Graph.Nodes.First(x => x.Name == nodeName);
+                resultRoute.Add(node);
+            }
+
+            for (int i = 0; i < resultRoute.Count-1; i++)
+            {
+                Edge actualEdge = resultRoute[i].Destinations.FirstOrDefault(x => x.Destination.Name == resultRoute[i + 1].Name);
+                actualEdge.Cost++;
+            }
+        }
+
+        private void AutomaticallyCreateDAG()
+        {
+            Console.WriteLine("Please, define a name for your new DAG:");
+            string dagNameInput = Console.ReadLine();
+
+            
+
+            Graph graph = new Graph()
+            {
+                Nodes = new List<Node>()
+            };
+
+            graph.Name = dagNameInput;
+
+            List<Node> userNodes = new List<Node>();
+
+            Console.WriteLine("Enter how many nodes: ");
+            string input = Console.ReadLine();
+            int numberOfNodes = Int32.Parse(input);
+
+            for (int i = 1; i < numberOfNodes+1; i++)
+            {
+                Node node = new Node() { };
+                string nameString = $"N{i}";
+                node.Name = nameString;
+                userNodes.Add(node);
+            }
+            graph.Nodes = userNodes;
+            Graph = graph;
+
+            foreach (Node item in userNodes)
+            {
+                List<Edge> destinations = new List<Edge>();
+                
+
+                int numberOfEdges = GetRandomNumber(2, 5);
+
+                for (int i = 0; i < numberOfEdges; i++)
+                {
+
+                    Edge edge = new Edge() { };
+
+                    while (true)
+                    {
+                        int connectedNodeNumber = GetRandomNumber(1, numberOfNodes + 1);
+                        edge.Destination = userNodes.FirstOrDefault(x => x.Name == $"N{connectedNodeNumber}");
+                        if (item != edge.Destination && destinations.All(x => x.Destination != edge.Destination))
+                            break;
+                    }
+
+                    double costInput = GetRandomNumber(1, 11);
+                    edge.Cost = costInput;
+                    destinations.Add(edge);
+                }
+                item.Destinations = destinations.ToArray();
+            }
+            
+            
         }
 
         private void CheckBestRoute()
@@ -64,7 +208,9 @@ namespace StartupMenu
                 var router = new Router(factory);
                 List<string> shortestPath = router.GetShortestPathDijkstra(inputStartNode, inputEndNode);
 
-                Console.WriteLine($"number of nodes visited: {router.NodeVisits}");
+                Console.WriteLine($"Number of nodes visited: {router.NodeVisits}");
+                Console.WriteLine();
+                Console.WriteLine($"Shortest path Cost: {router.ShortestPathCost}");
                 Console.WriteLine();
                 foreach (var item in shortestPath)
                 {
@@ -332,14 +478,11 @@ namespace StartupMenu
             }
             userGraphToSave.Add(inputName, userNodesToSave);
 
-            using (StreamWriter file = File.CreateText(NodeFilePath))
+            using (StreamWriter file = File.CreateText(NodeFilePathOut))
             {
                 JsonSerializer serializer = new JsonSerializer();
                 serializer.Serialize(file, userGraphToSave);
             }
-
-            Console.WriteLine("Your DAG has been saved!");
-            Console.WriteLine();
         }
 
         private void ImportNewDAG()
@@ -366,7 +509,7 @@ namespace StartupMenu
             Dictionary<string, List<string>> importedNodes = new Dictionary<string, List<string>>();
             Dictionary<string, Dictionary<string, List<string>>> importedGraph = new Dictionary<string, Dictionary<string, List<string>>>();
 
-            using (StreamReader file = File.OpenText(NodeFilePath))
+            using (StreamReader file = File.OpenText(NodeFilePathIn))
             {
                 JsonSerializer serializer = new JsonSerializer();
                 importedGraph = (Dictionary<string, Dictionary<string, List<string>>>)serializer.Deserialize(file, typeof(Dictionary<string, Dictionary<string, List<string>>>));
@@ -473,6 +616,15 @@ namespace StartupMenu
             return options[selected];
         }
 
+        
+
+        public static int GetRandomNumber(int min, int max)
+        {
+            lock (getrandom) // synchronize
+            {
+                return getrandom.Next(min, max);
+            }
+        }
     }
 }
 

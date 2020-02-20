@@ -18,7 +18,7 @@ namespace Calculation
 
         public int NodeVisits { get; private set; }
 
-        public double ShortestPathCost { get; private set; }
+        public double? ShortestPathCost { get; private set; }
 
         public List<CalcNode> CalcNodes { get; set; } = new List<CalcNode>();
 
@@ -42,6 +42,7 @@ namespace Calculation
             var shortestPath = new List<CalcNode>();
 
             shortestPath.Add(routingState.End);
+            ShortestPathCost = routingState.End.MinCostToStart;
             BuildShortestPath(shortestPath, routingState.End);
             shortestPath.Reverse();
             result = shortestPath.Select(x => x.Name).ToList();
@@ -89,16 +90,17 @@ namespace Calculation
         }
 
 
+       
+
         private void BuildShortestPath(List<CalcNode> list, CalcNode calcNode)
         {
             if (calcNode.NearestToStart == null)
                 return;
             list.Add(calcNode.NearestToStart);
-            //ShortestPathCost += node.Destinations.Single(x => x.Destination == node.NearestToStart).Cost;
+            
+            //ShortestPathCost += calcNode.Destinations.Single(x => x.Destination.Name == calcNode.NearestToStart.Name).Cost;
             BuildShortestPath(list, calcNode.NearestToStart);
         }
-
-
 
 
 
