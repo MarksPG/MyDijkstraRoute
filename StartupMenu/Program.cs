@@ -15,6 +15,7 @@ namespace StartupMenu
 
             var app = new Layout();
 
+            
             app.Run();
         }
     }

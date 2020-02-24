@@ -3,20 +3,27 @@ using Layout_FrameMenu;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 
+[assembly: log4net.Config.XmlConfigurator(Watch = true)]
 
 namespace StartupMenu
 {
+
     public class Layout
     {
+        private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+
         public Graph Graph { get; set; }
+
+        public static DateTime Today { get; }
 
         private static readonly Random getrandom = new Random();
 
         const string NodeFilePathIn = @"C:\Windows\Temp\01_Start.json";
-        const string NodeFilePathOut = @"C:\Windows\Temp\02_Slut.json";
+        const string NodeFilePathOut = @"C:\Windows\Temp\DAG_200_3_10000.json";
 
         public void Run()
         {
@@ -55,7 +62,75 @@ namespace StartupMenu
 
         private void RunPerformanceTest()
         {
-            throw new NotImplementedException();
+            AutomaticallyCreateDAG();
+            int numberOfNodes = Graph.Nodes.Count();
+            int numberOfEdges = Graph.Nodes[0].Destinations.Length;
+
+            Console.WriteLine("Please enter number of iterations");
+            int inputIterationNumber = int.Parse(Console.ReadLine());
+
+            var factory = new LayoutFactory(Graph);
+            var router = new Router(factory);
+
+            //FileStream filestream = new FileStream($@"C:\Windows\Temp\{inputIterationNumber}_iterations.csv", FileMode.Create);
+            //var streamwriter = new StreamWriter(filestream);
+            //streamwriter.AutoFlush = true;
+
+            Stopwatch sw = Stopwatch.StartNew();
+
+            for (int i = 0; i < inputIterationNumber; i++)
+            {
+                string inputStartNode;
+                string inputEndNode;
+                List<string> shortestPath = new List<string>();
+                string routeString = "";
+
+                while (true)
+                {
+                    inputStartNode = $"N{GetRandomNumber(1, numberOfNodes / 4)}";
+                    inputEndNode = $"N{GetRandomNumber(numberOfNodes / 4, numberOfNodes + 1)}";
+                    if (inputStartNode != inputEndNode)
+                        break;
+                }
+
+                //Console.SetOut(streamwriter);
+                //Console.SetError(streamwriter);
+                Stopwatch swInner = Stopwatch.StartNew();
+                shortestPath = router.GetShortestPathDijkstra(inputStartNode, inputEndNode);
+
+                //Console.WriteLine("Time taken for Routecalculation #{0} iteration: {1}ms", i + 1, sw.ElapsedMilliseconds);
+
+
+                //Console.WriteLine();
+                //Console.WriteLine($"Result from calculation #{i + 1}");
+                //Console.WriteLine();
+                //Console.WriteLine($"Number of nodes visited: {router.NodeVisits}");
+                //Console.WriteLine();
+                //Console.WriteLine($"Shortest path Cost: {router.ShortestPathCost}");
+                //Console.WriteLine();
+
+
+                foreach (var item in shortestPath)
+                {
+                    routeString += item + "-";
+                    //Console.WriteLine($"{item}");
+                }
+                string choppedRouteString = routeString.Remove(routeString.Length - 1, 1);
+                log.Debug($"Routecalculation #{i + 1}\nTime taken for iteration: {swInner.ElapsedMilliseconds}ms\nShortest path: {choppedRouteString}\nNumber of visited Nodes: {router.NodeVisits}\nShortestPathCost: {router.ShortestPathCost}\n");
+                swInner.Stop();
+
+            }
+            //Console.WriteLine(routeString);
+            log.Info($"Number of Nodes in Graph: {numberOfNodes}\nNumber of edges per Node: {numberOfEdges}\nTotal time for all {inputIterationNumber} iterations(ms): {sw.ElapsedMilliseconds}\n");
+
+            //Console.WriteLine("Time taken until all iterations done saved: {0}ms", sw.ElapsedMilliseconds);
+            Console.WriteLine();
+            Console.WriteLine("Test done!");
+            Console.WriteLine();
+
+            SaveExistingDAG();
+            //streamwriter.AutoFlush = false;
+            sw.Stop();
         }
 
         private void RunIterative()
@@ -76,20 +151,20 @@ namespace StartupMenu
                 var factory = new LayoutFactory(Graph);
                 var router = new Router(factory);
 
-                FileStream filestream = new FileStream(@"C:\Windows\Temp\50_iterations.txt", FileMode.Create);
-                var streamwriter = new StreamWriter(filestream);
-                streamwriter.AutoFlush = true;
+                //FileStream filestream = new FileStream($@"C:\Windows\Temp\{inputIterationNumber}_iterations.csv", FileMode.Create);
+                //var streamwriter = new StreamWriter(filestream);
+                //streamwriter.AutoFlush = true;
 
 
                 for (int i = 0; i < inputIterationNumber; i++)
                 {
 
-                    Console.SetOut(streamwriter);
-                    Console.SetError(streamwriter);
+                    //Console.SetOut(streamwriter);
+                    //Console.SetError(streamwriter);
 
                     List<string> shortestPath = router.GetShortestPathDijkstra(inputStartNode, inputEndNode);
                     Console.WriteLine();
-                    Console.WriteLine($"Result from calculation #{i+1}");
+                    Console.WriteLine($"Result from calculation #{i + 1}");
                     Console.WriteLine();
                     Console.WriteLine($"Number of nodes visited: {router.NodeVisits}");
                     Console.WriteLine();
@@ -103,11 +178,11 @@ namespace StartupMenu
 
                     IncreaseEdgeByIncrement(shortestPath);
                 }
-                streamwriter.AutoFlush = false;
+                //streamwriter.AutoFlush = false;
                 SaveExistingDAG();
-                streamwriter.Dispose();
-                filestream.Dispose();
-                
+                //streamwriter.Dispose();
+                //filestream.Dispose();
+
             }
         }
 
@@ -121,7 +196,7 @@ namespace StartupMenu
                 resultRoute.Add(node);
             }
 
-            for (int i = 0; i < resultRoute.Count-1; i++)
+            for (int i = 0; i < resultRoute.Count - 1; i++)
             {
                 Edge actualEdge = resultRoute[i].Destinations.FirstOrDefault(x => x.Destination.Name == resultRoute[i + 1].Name);
                 actualEdge.Cost++;
@@ -130,25 +205,27 @@ namespace StartupMenu
 
         private void AutomaticallyCreateDAG()
         {
-            Console.WriteLine("Please, define a name for your new DAG:");
-            string dagNameInput = Console.ReadLine();
-
-            
+            //Console.WriteLine("Please, define a name for your new DAG:");
+            //string dagNameInput = Console.ReadLine();
 
             Graph graph = new Graph()
             {
                 Nodes = new List<Node>()
             };
 
-            graph.Name = dagNameInput;
+            //graph.Name = dagNameInput;
 
             List<Node> userNodes = new List<Node>();
 
             Console.WriteLine("Enter how many nodes: ");
-            string input = Console.ReadLine();
-            int numberOfNodes = Int32.Parse(input);
+            string nodeInput = Console.ReadLine();
+            int numberOfNodes = Int32.Parse(nodeInput);
 
-            for (int i = 1; i < numberOfNodes+1; i++)
+            Console.WriteLine("Enter how many edges/node: ");
+            string edgeInput = Console.ReadLine();
+            int numberOfEdges = Int32.Parse(edgeInput);
+
+            for (int i = 1; i < numberOfNodes + 1; i++)
             {
                 Node node = new Node() { };
                 string nameString = $"N{i}";
@@ -161,13 +238,12 @@ namespace StartupMenu
             foreach (Node item in userNodes)
             {
                 List<Edge> destinations = new List<Edge>();
-                
 
-                int numberOfEdges = GetRandomNumber(2, 5);
+                //int numberOfEdges = GetRandomNumber(2, 5);
+                //int numberOfEdges = 3;
 
                 for (int i = 0; i < numberOfEdges; i++)
                 {
-
                     Edge edge = new Edge() { };
 
                     while (true)
@@ -184,8 +260,7 @@ namespace StartupMenu
                 }
                 item.Destinations = destinations.ToArray();
             }
-            
-            
+
         }
 
         private void CheckBestRoute()
@@ -202,7 +277,7 @@ namespace StartupMenu
                 Console.WriteLine("Please enter an endNode");
                 string inputEndNode = Console.ReadLine();
 
-                
+
 
                 var factory = new LayoutFactory(Graph);
                 var router = new Router(factory);
@@ -451,7 +526,7 @@ namespace StartupMenu
                 {
                     break;
                 }
-                
+
             }
 
         }
@@ -460,9 +535,9 @@ namespace StartupMenu
         {
             Dictionary<string, List<string>> userNodesToSave = new Dictionary<string, List<string>>();
             Dictionary<string, Dictionary<string, List<string>>> userGraphToSave = new Dictionary<string, Dictionary<string, List<string>>>();
-            
+
             Console.WriteLine("Please, set a name to the existing DAG: ");
-            string inputName = Console.ReadLine();
+            Graph.Name = Console.ReadLine();
 
             foreach (Node item in Graph.Nodes)
             {
@@ -476,7 +551,7 @@ namespace StartupMenu
                 }
                 userNodesToSave.Add(nodeName, destinations);
             }
-            userGraphToSave.Add(inputName, userNodesToSave);
+            userGraphToSave.Add(Graph.Name, userNodesToSave);
 
             using (StreamWriter file = File.CreateText(NodeFilePathOut))
             {
@@ -616,7 +691,7 @@ namespace StartupMenu
             return options[selected];
         }
 
-        
+
 
         public static int GetRandomNumber(int min, int max)
         {
