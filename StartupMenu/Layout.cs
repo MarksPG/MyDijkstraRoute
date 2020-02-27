@@ -23,7 +23,7 @@ namespace StartupMenu
         private static readonly Random getrandom = new Random();
 
         const string NodeFilePathIn = @"C:\Windows\Temp\01_Start.json";
-        const string NodeFilePathOut = @"C:\Windows\Temp\DAG_200_3_10000.json";
+        const string NodeFilePathOut = @"C:\Windows\Temp\DAG_1000_Various(2 to 4)_10000_#2.json";
 
         public void Run()
         {
@@ -60,11 +60,13 @@ namespace StartupMenu
             }
         }
 
+        
+
         private void RunPerformanceTest()
         {
             AutomaticallyCreateDAG();
             int numberOfNodes = Graph.Nodes.Count();
-            int numberOfEdges = Graph.Nodes[0].Destinations.Length;
+            //int numberOfEdges = Graph.Nodes[0].Destinations.Length;
 
             Console.WriteLine("Please enter number of iterations");
             int inputIterationNumber = int.Parse(Console.ReadLine());
@@ -121,7 +123,7 @@ namespace StartupMenu
 
             }
             //Console.WriteLine(routeString);
-            log.Info($"Number of Nodes in Graph: {numberOfNodes}\nNumber of edges per Node: {numberOfEdges}\nTotal time for all {inputIterationNumber} iterations(ms): {sw.ElapsedMilliseconds}\n");
+            log.Info($"Number of Nodes in Graph: {numberOfNodes}\nTotal time for all {inputIterationNumber} iterations(ms): {sw.ElapsedMilliseconds}\n");
 
             //Console.WriteLine("Time taken until all iterations done saved: {0}ms", sw.ElapsedMilliseconds);
             Console.WriteLine();
@@ -221,9 +223,9 @@ namespace StartupMenu
             string nodeInput = Console.ReadLine();
             int numberOfNodes = Int32.Parse(nodeInput);
 
-            Console.WriteLine("Enter how many edges/node: ");
-            string edgeInput = Console.ReadLine();
-            int numberOfEdges = Int32.Parse(edgeInput);
+            //Console.WriteLine("Enter how many edges/node: ");
+            //string edgeInput = Console.ReadLine();
+            //int numberOfEdges = Int32.Parse(edgeInput);
 
             for (int i = 1; i < numberOfNodes + 1; i++)
             {
@@ -239,7 +241,7 @@ namespace StartupMenu
             {
                 List<Edge> destinations = new List<Edge>();
 
-                //int numberOfEdges = GetRandomNumber(2, 5);
+                int numberOfEdges = GetRandomNumber(2, 5);
                 //int numberOfEdges = 3;
 
                 for (int i = 0; i < numberOfEdges; i++)
