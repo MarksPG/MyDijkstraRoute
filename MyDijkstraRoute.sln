@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Layout_FrameMenu", "Layout_
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StartupMenu", "StartupMenu\StartupMenu.csproj", "{453E5DE8-3131-44AA-AFA0-18B6C74F8572}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Calculation_Frame.Tests", "Calculation_Frame.Tests\Calculation_Frame.Tests.csproj", "{8DA0AC3C-FC0D-45BE-BA88-AD2B875CFC4C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +35,10 @@ Global
 		{453E5DE8-3131-44AA-AFA0-18B6C74F8572}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{453E5DE8-3131-44AA-AFA0-18B6C74F8572}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{453E5DE8-3131-44AA-AFA0-18B6C74F8572}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8DA0AC3C-FC0D-45BE-BA88-AD2B875CFC4C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8DA0AC3C-FC0D-45BE-BA88-AD2B875CFC4C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8DA0AC3C-FC0D-45BE-BA88-AD2B875CFC4C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8DA0AC3C-FC0D-45BE-BA88-AD2B875CFC4C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

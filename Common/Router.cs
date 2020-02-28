@@ -13,9 +13,6 @@ namespace Calculation
 
         private readonly Graph Graph;
 
-        //private readonly RoutingState _routingState;
-
-
         public int NodeVisits { get; private set; }
 
         public double? ShortestPathCost { get; private set; }
@@ -89,8 +86,6 @@ namespace Calculation
             } while (routingstate.PrioQueue.Any());
         }
 
-
-       
 
         private void BuildShortestPath(List<CalcNode> list, CalcNode calcNode)
         {
