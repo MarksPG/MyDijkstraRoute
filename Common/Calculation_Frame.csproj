@@ -46,6 +46,7 @@
     <Compile Include="Router.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RouterFactory.cs" />
+    <Compile Include="RouterResult.cs" />
     <Compile Include="RoutingState.cs" />
   </ItemGroup>
   <ItemGroup>

@@ -32,17 +32,29 @@ namespace Calculation_Frame.Tests
         public void ShortestPathDijkstra_ListOfStringShouldContainSomeGivenNodes_Theory(string expected, string startNode, string endNode)
         {
             // Arrange
-            // See [Theory]
+            List<string> nodesAsStrings = new List<string>();
 
             // Act
             var listOfNodes = _sut.GetShortestPathDijkstra(startNode, endNode);
+            foreach (RouterResult item in listOfNodes)
+            {
+                nodesAsStrings.Add(item.NodeName);
+            }
 
             // Assert
-            Assert.Contains(expected, listOfNodes);
+            Assert.Contains(expected, nodesAsStrings);
         }
 
-        public void ShortestPathDijkstra_Should 
+        [Fact]
+        public void RouterConstructor_ErrorMessageShouldbeThrownIfGraphIsNull()
+        {
+            //Arrange
 
-        
+            //Act
+
+            //Assert
+        }
+
+
     }
 }

@@ -40,6 +40,7 @@ namespace StartupMenu
                         "Check best route through calculation",
                         "Run iterative calculations through DAG",
                         "Run performancetest",
+                        "Find all Nodes that connect to a specific Node in DAG",
                         "Quit"
                     }); ;
                 Console.Clear();
@@ -54,13 +55,39 @@ namespace StartupMenu
                 else if (option == "Check best route through calculation") CheckBestRoute();
                 else if (option == "Run iterative calculations through DAG") RunIterative();
                 else if (option == "Run performancetest") RunPerformanceTest();
+                else if (option == "Find all Nodes that connect to a specific Node in DAG") CheckIncomingNodes();
                 else Environment.Exit(0);
 
                 Console.WriteLine();
             }
         }
 
-        
+        private void CheckIncomingNodes()
+        {
+            if (Graph.Nodes == null || Graph.Nodes.Count() == 0)
+            {
+                Console.WriteLine("There is currently no existing DAG. You need to define a DAG or import a DAG from file!");
+            }
+            else
+
+            {
+                Console.WriteLine("Please enter what Node to check");
+                string inputDestinationNode = Console.ReadLine();
+
+                foreach (Node node in Graph.Nodes)
+                {
+                    if(node.Destinations.Any(x => x.Destination.Name == inputDestinationNode))
+                    {
+                        Console.WriteLine(node.Name);
+                    }
+                    
+                }
+                
+
+                
+            }
+
+        }
 
         private void RunPerformanceTest()
         {
@@ -73,19 +100,17 @@ namespace StartupMenu
 
             var factory = new LayoutFactory(Graph);
             var router = new Router(factory);
-
-            //FileStream filestream = new FileStream($@"C:\Windows\Temp\{inputIterationNumber}_iterations.csv", FileMode.Create);
-            //var streamwriter = new StreamWriter(filestream);
-            //streamwriter.AutoFlush = true;
-
+                        
             Stopwatch sw = Stopwatch.StartNew();
 
             for (int i = 0; i < inputIterationNumber; i++)
             {
                 string inputStartNode;
                 string inputEndNode;
-                List<string> shortestPath = new List<string>();
+                List<RouterResult> shortestPath = new List<RouterResult>();
                 string routeString = "";
+                string pathCostString = "";
+                string inner = "";
 
                 while (true)
                 {
@@ -95,43 +120,48 @@ namespace StartupMenu
                         break;
                 }
 
-                //Console.SetOut(streamwriter);
-                //Console.SetError(streamwriter);
                 Stopwatch swInner = Stopwatch.StartNew();
-                shortestPath = router.GetShortestPathDijkstra(inputStartNode, inputEndNode);
 
-                //Console.WriteLine("Time taken for Routecalculation #{0} iteration: {1}ms", i + 1, sw.ElapsedMilliseconds);
-
-
-                //Console.WriteLine();
-                //Console.WriteLine($"Result from calculation #{i + 1}");
-                //Console.WriteLine();
-                //Console.WriteLine($"Number of nodes visited: {router.NodeVisits}");
-                //Console.WriteLine();
-                //Console.WriteLine($"Shortest path Cost: {router.ShortestPathCost}");
-                //Console.WriteLine();
-
-
-                foreach (var item in shortestPath)
+                try
                 {
-                    routeString += item + "-";
-                    //Console.WriteLine($"{item}");
+                    shortestPath = router.GetShortestPathDijkstra(inputStartNode, inputEndNode);
                 }
-                string choppedRouteString = routeString.Remove(routeString.Length - 1, 1);
-                log.Debug($"Routecalculation #{i + 1}\nTime taken for iteration: {swInner.ElapsedMilliseconds}ms\nShortest path: {choppedRouteString}\nNumber of visited Nodes: {router.NodeVisits}\nShortestPathCost: {router.ShortestPathCost}\n");
-                swInner.Stop();
+                catch (Exception ex)
+                {
+                    inner = ex.Message;
+                    Console.WriteLine(inner);
+                    Console.WriteLine(ex.StackTrace);
+                }
 
+                if (shortestPath.Count > 0)
+                {
+                    foreach (var item in shortestPath)
+                    {
+                        routeString += item.NodeName + "-";
+                        pathCostString += item.ShortestPathValue + "-";
+                    }
+                    string choppedRouteString = routeString.Remove(routeString.Length - 1, 1);
+                    string choppedpathCostString = pathCostString.Remove(pathCostString.Length - 1, 1);
+                    log.Debug($"Routecalculation #{i + 1}\nTime taken for iteration: {swInner.ElapsedMilliseconds}ms\n" +
+                        $"StartNode = {inputStartNode}\nEndNode = {inputEndNode}\nShortest path: {choppedRouteString}\n" +
+                        $"PathCost: {choppedpathCostString}\nNumber of visited Nodes: {router.NodeVisits}\n" +
+                        $"ShortestPathCost: {router.ShortestPathCost}\n");
+                }
+                else
+                {
+                    log.Debug($"{inner}");
+                }
+                swInner.Stop();
             }
-            //Console.WriteLine(routeString);
+            
             log.Info($"Number of Nodes in Graph: {numberOfNodes}\nTotal time for all {inputIterationNumber} iterations(ms): {sw.ElapsedMilliseconds}\n");
 
-            //Console.WriteLine("Time taken until all iterations done saved: {0}ms", sw.ElapsedMilliseconds);
             Console.WriteLine();
             Console.WriteLine("Test done!");
             Console.WriteLine();
 
             SaveExistingDAG();
-            //streamwriter.AutoFlush = false;
+            
             sw.Stop();
         }
 
@@ -153,18 +183,10 @@ namespace StartupMenu
                 var factory = new LayoutFactory(Graph);
                 var router = new Router(factory);
 
-                //FileStream filestream = new FileStream($@"C:\Windows\Temp\{inputIterationNumber}_iterations.csv", FileMode.Create);
-                //var streamwriter = new StreamWriter(filestream);
-                //streamwriter.AutoFlush = true;
-
 
                 for (int i = 0; i < inputIterationNumber; i++)
                 {
-
-                    //Console.SetOut(streamwriter);
-                    //Console.SetError(streamwriter);
-
-                    List<string> shortestPath = router.GetShortestPathDijkstra(inputStartNode, inputEndNode);
+                    List<RouterResult> shortestPath = router.GetShortestPathDijkstra(inputStartNode, inputEndNode);
                     Console.WriteLine();
                     Console.WriteLine($"Result from calculation #{i + 1}");
                     Console.WriteLine();
@@ -175,26 +197,22 @@ namespace StartupMenu
 
                     foreach (var item in shortestPath)
                     {
-                        Console.WriteLine($"{item}");
+                        Console.WriteLine($"{item.NodeName}");
                     }
 
                     IncreaseEdgeByIncrement(shortestPath);
                 }
-                //streamwriter.AutoFlush = false;
                 SaveExistingDAG();
-                //streamwriter.Dispose();
-                //filestream.Dispose();
-
             }
         }
 
-        private void IncreaseEdgeByIncrement(List<string> shortestPath)
+        private void IncreaseEdgeByIncrement(List<RouterResult> shortestPath)
         {
             List<Node> resultRoute = new List<Node>();
 
-            foreach (string nodeName in shortestPath)
+            foreach (var item in shortestPath)
             {
-                Node node = Graph.Nodes.First(x => x.Name == nodeName);
+                Node node = Graph.Nodes.First(x => x.Name == item.NodeName);
                 resultRoute.Add(node);
             }
 
@@ -279,11 +297,9 @@ namespace StartupMenu
                 Console.WriteLine("Please enter an endNode");
                 string inputEndNode = Console.ReadLine();
 
-
-
                 var factory = new LayoutFactory(Graph);
                 var router = new Router(factory);
-                List<string> shortestPath = router.GetShortestPathDijkstra(inputStartNode, inputEndNode);
+                List<RouterResult> shortestPath = router.GetShortestPathDijkstra(inputStartNode, inputEndNode);
 
                 Console.WriteLine($"Number of nodes visited: {router.NodeVisits}");
                 Console.WriteLine();
@@ -291,7 +307,7 @@ namespace StartupMenu
                 Console.WriteLine();
                 foreach (var item in shortestPath)
                 {
-                    Console.WriteLine($"{item}");
+                    Console.WriteLine($"{item.NodeName}");
                 }
             }
         }
@@ -692,8 +708,6 @@ namespace StartupMenu
             Console.CursorVisible = true;
             return options[selected];
         }
-
-
 
         public static int GetRandomNumber(int min, int max)
         {

@@ -3,8 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.29728.190
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Layout_CoreMenu", "MyDijkstraRoute\Layout_CoreMenu.csproj", "{4662BA4A-9D7C-4810-9A95-A01CF332F42D}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Calculation_Frame", "Common\Calculation_Frame.csproj", "{B75821EB-7EA3-4696-8706-4A8A039C08A7}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Layout_FrameMenu", "Layout_FrameMenu\Layout_FrameMenu.csproj", "{D4616176-6EF5-4DEB-B980-EEEAF03D2A36}"
@@ -19,10 +17,6 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{4662BA4A-9D7C-4810-9A95-A01CF332F42D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{4662BA4A-9D7C-4810-9A95-A01CF332F42D}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{4662BA4A-9D7C-4810-9A95-A01CF332F42D}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{4662BA4A-9D7C-4810-9A95-A01CF332F42D}.Release|Any CPU.Build.0 = Release|Any CPU
 		{B75821EB-7EA3-4696-8706-4A8A039C08A7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{B75821EB-7EA3-4696-8706-4A8A039C08A7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B75821EB-7EA3-4696-8706-4A8A039C08A7}.Release|Any CPU.ActiveCfg = Release|Any CPU

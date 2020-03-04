@@ -23,28 +23,78 @@ namespace Calculation
         public Router(ILayoutFactory lf)
         {
             _layoutFactory = lf;
+
             Graph = lf.GetLayout();
+
+            if(Graph == null)
+            {
+                throw new NullReferenceException("A graph does not exist, or has not been properly instantiated");
+            }
         }
 
 
-        public List<string> GetShortestPathDijkstra(string startNode, string endNode)
+        public List<RouterResult> GetShortestPathDijkstra(string startNode, string endNode)
         {
+            if(startNode == endNode)
+            {
+                throw new ArgumentException("Router can not process route calculation for endNode similar to startNode!");
+            }
+            else if (startNode == null || endNode == null)
+            {
+                throw new NullReferenceException("Either startNode or endNode is null!");
+            }
+
             Node StartNode = Graph.Nodes.FirstOrDefault(x => x.Name == startNode);
             Node EndNode = Graph.Nodes.FirstOrDefault(x => x.Name == endNode);
 
             RoutingState routingState = new RoutingState(StartNode, EndNode);
 
             DijkstraSearch(routingState);
-            List<string> result;
+            List<RouterResult> result = new List<RouterResult>();
             var shortestPath = new List<CalcNode>();
 
             shortestPath.Add(routingState.End);
-            ShortestPathCost = routingState.End.MinCostToStart;
+            ShortestPathCost = SetShortestPathCost(routingState);
             BuildShortestPath(shortestPath, routingState.End);
+            
             shortestPath.Reverse();
-            result = shortestPath.Select(x => x.Name).ToList();
+            if (!shortestPath.Any(x => x.Name == endNode) || !shortestPath.Any(x => x.Name == startNode))
+            {
+                throw new ArgumentException("Router can not process route calculation for Nodes that aren't connected");
+            }
+            int i = 0;
+            while (i < shortestPath.Count - 1)
+            {
+                RouterResult routerResult = new RouterResult()
+                {
+                    NodeName = shortestPath[i].Name,
+                    ShortestPathValue = shortestPath[i].Destinations.FirstOrDefault(x => x.Destination.Name == shortestPath[i + 1].Name).Cost
+                };
+                result.Add(routerResult);
+                i++;
+            }
+            RouterResult routerResult2 = new RouterResult()
+            {
+                NodeName = shortestPath[i].Name,
+                ShortestPathValue = 0
+            };
+            result.Add(routerResult2);
+
 
             return result;
+        }
+
+        private double? SetShortestPathCost(RoutingState routingState)
+        {
+            try
+            {
+                double? value = routingState.End.MinCostToStart;
+                return value;
+            }
+            catch
+            {
+                throw new NullReferenceException("ShortestPath is only one Node. StartPoint and EndPoint cannot be identical!");
+            }
         }
 
 
@@ -96,9 +146,6 @@ namespace Calculation
             //ShortestPathCost += calcNode.Destinations.Single(x => x.Destination.Name == calcNode.NearestToStart.Name).Cost;
             BuildShortestPath(list, calcNode.NearestToStart);
         }
-
-
-
 
     }
 }
