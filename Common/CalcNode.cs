@@ -20,13 +20,10 @@ namespace Calculation
             this.LayoutNode = node;
         }
 
-        public double? MinCostToStart { get; set; }
+        public int? MinCostToStart { get; set; }
         
         public CalcNode NearestToStart { get; set; }
 
-        //public override string ToString()
-        //{
-        //    return Name;
-        //}
+        
     }
 }

@@ -15,7 +15,7 @@ namespace Calculation
 
         public int NodeVisits { get; private set; }
 
-        public double? ShortestPathCost { get; private set; }
+        public int? ShortestPathCost { get; private set; }
 
         public List<CalcNode> CalcNodes { get; set; } = new List<CalcNode>();
 
@@ -26,9 +26,9 @@ namespace Calculation
 
             Graph = lf.GetLayout();
 
-            if(Graph == null)
+            if(Graph.Nodes.Count == 0)
             {
-                throw new NullReferenceException("A graph does not exist, or has not been properly instantiated");
+                throw new ArgumentException("A graph does not exist, or has not been properly instantiated");
             }
         }
 
@@ -68,7 +68,7 @@ namespace Calculation
                 RouterResult routerResult = new RouterResult()
                 {
                     NodeName = shortestPath[i].Name,
-                    ShortestPathValue = shortestPath[i].Destinations.FirstOrDefault(x => x.Destination.Name == shortestPath[i + 1].Name).Cost
+                    ShortestPathValue = shortestPath[i].Destinations.FirstOrDefault(x => x.Destination.Name == shortestPath[i + 1].Name).Cost.InitialValue
                 };
                 result.Add(routerResult);
                 i++;
@@ -84,15 +84,15 @@ namespace Calculation
             return result;
         }
 
-        private double? SetShortestPathCost(RoutingState routingState)
+        private int? SetShortestPathCost(RoutingState routingState)
         {
             try
             {
-                double? value = routingState.End.MinCostToStart;
+                int? value = routingState.End.MinCostToStart;
                 return value;
             }
             catch
-            {
+            { 
                 throw new NullReferenceException("ShortestPath is only one Node. StartPoint and EndPoint cannot be identical!");
             }
         }
@@ -109,11 +109,11 @@ namespace Calculation
             do
             {
                 NodeVisits++;
-                routingstate.PrioQueue = routingstate.PrioQueue.OrderBy(x => x.MinCostToStart.Value).ToList();
+                routingstate.PrioQueue = routingstate.PrioQueue.OrderBy(x => x.MinCostToStart).ToList();
                 CalcNode calcNode = routingstate.PrioQueue.First();
                 routingstate.PrioQueue.Remove(calcNode);
 
-                foreach (var cnn in calcNode.Destinations.OrderBy(x => x.Cost))
+                foreach (var cnn in calcNode.Destinations.OrderBy(x => x.Cost.InitialValue))
                 {
                     var childNode = routingstate.GetNode(cnn.Destination.Name);
                     if (childNode == null) { childNode = new CalcNode(cnn.Destination); }
@@ -122,9 +122,9 @@ namespace Calculation
                     if (routingstate.Visited.Contains(childNode))
                         continue;
                     if (childNode.MinCostToStart == null ||
-                        calcNode.MinCostToStart + cnn.Cost < childNode.MinCostToStart)
+                        calcNode.MinCostToStart + cnn.Cost.InitialValue < childNode.MinCostToStart)
                     {
-                        childNode.MinCostToStart = calcNode.MinCostToStart + cnn.Cost;
+                        childNode.MinCostToStart = calcNode.MinCostToStart + cnn.Cost.InitialValue;
                         childNode.NearestToStart = calcNode;
                         if (!routingstate.PrioQueue.Contains(childNode))
                             routingstate.PrioQueue.Add(childNode);

@@ -6,13 +6,11 @@ namespace Layout_FrameMenu
 {
     public class Edge
     {
-        public double Cost { get; set; }
+        public Cost Cost { get; set; }
+
+        public Node FromNode { get; set; }
 
         public Node Destination { get; set; }
 
-        //public override string ToString()
-        //{
-        //    return "-> " + Destination.ToString();
-        //}
     }
 }

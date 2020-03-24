@@ -10,6 +10,6 @@ namespace Calculation
     {
         public string NodeName { get; set; }
 
-        public double? ShortestPathValue { get; set; }
+        public int? ShortestPathValue { get; set; }
     }
 }

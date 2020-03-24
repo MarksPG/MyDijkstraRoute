@@ -22,8 +22,8 @@ namespace StartupMenu
 
         private static readonly Random getrandom = new Random();
 
-        const string NodeFilePathIn = @"C:\Windows\Temp\01_Start.json";
-        const string NodeFilePathOut = @"C:\Windows\Temp\DAG_1000_Various(2 to 4)_10000_#2.json";
+        const string NodeFilePathIn = @"C:\Windows\Temp\TestForNewEdge.json";
+        const string NodeFilePathOut = @"C:\Windows\Temp\RGLayout_out.json";
 
         public void Run()
         {
@@ -36,10 +36,13 @@ namespace StartupMenu
                         "Add new node in existing DAG",
                         "Redefine node in existing DAG",
                         "Save existing DAG to file",
+                        "Save existing DAG to database",
                         "Import new DAG from file",
+                        "Automatic DAG with variable edge Cost",
                         "Check best route through calculation",
                         "Run iterative calculations through DAG",
                         "Run performancetest",
+                        
                         "Find all Nodes that connect to a specific Node in DAG",
                         "Quit"
                     }); ;
@@ -51,15 +54,110 @@ namespace StartupMenu
                 else if (option == "Add new node in existing DAG") AddNewNode();
                 else if (option == "Redefine node in existing DAG") AddOrRedefineNode();
                 else if (option == "Save existing DAG to file") SaveExistingDAG();
+                else if (option == "Save existing DAG to database") SaveToDatabase();
                 else if (option == "Import new DAG from file") ImportNewDAG();
+                else if (option == "Automatic DAG with variable edge Cost") CreateDAGWithVariableEdge();
                 else if (option == "Check best route through calculation") CheckBestRoute();
                 else if (option == "Run iterative calculations through DAG") RunIterative();
+
                 else if (option == "Run performancetest") RunPerformanceTest();
                 else if (option == "Find all Nodes that connect to a specific Node in DAG") CheckIncomingNodes();
                 else Environment.Exit(0);
 
                 Console.WriteLine();
             }
+        }
+
+        private void SaveToDatabase()
+        {
+            if (Graph.Nodes == null || Graph.Nodes.Count() == 0)
+            {
+                Console.WriteLine("There is currently no existing DAG. You need to define a DAG or import a DAG from file!");
+            }
+            else
+            {
+                int counter = 0;
+                List<Node> userNodes = Graph.Nodes;
+
+                using (var db = new LayoutContext())
+                {
+                    for (int i = 0; i < userNodes.Count; i++)
+                    {
+                        for (int k = 0; k < userNodes[i].Destinations.Length; k++)
+                        {
+                            List<CostData> costDatas = new List<CostData>();
+                            CostData costData = new CostData();
+                            costDatas.Add(costData);
+
+
+                            Position position = new Position()
+                            {
+                                FromPosition = userNodes[i].Name,
+                                ToPosition = userNodes[i].Destinations[k].Destination.Name,
+                                Costs = costDatas
+                            };
+                            position.Costs[0].Distance = (userNodes[i].Destinations[k].Cost.InitialValue).GetValueOrDefault();
+                            db.Positions.Add(position);
+                            counter++;
+                        }
+                    }
+                    db.SaveChanges();
+                    Console.WriteLine($"Number of saved positions to database: {counter}");
+                }
+                    
+            }
+
+        }
+
+        private void CreateDAGWithVariableEdge()
+        {
+            Graph graph = new Graph()
+            {
+                Nodes = new List<Node>()
+            };
+
+            List<Node> userNodes = new List<Node>();
+
+            Console.WriteLine("Enter how many nodes: ");
+            string nodeInput = Console.ReadLine();
+            int numberOfNodes = Int32.Parse(nodeInput);
+
+            for (int i = 1; i < numberOfNodes + 1; i++)
+            {
+                Node node = new Node() { };
+                string nameString = $"N{i}";
+                node.Name = nameString;
+                userNodes.Add(node);
+            }
+            graph.Nodes = userNodes;
+            Graph = graph;
+
+            foreach (Node item in userNodes)
+            {
+                List<Edge> destinations = new List<Edge>();
+
+                int numberOfEdges = GetRandomNumber(2, 5);
+                
+
+                for (int i = 0; i < numberOfEdges; i++)
+                {
+                    Edge edge = new Edge() { };
+                    Cost cost = new Cost() { };
+
+                    while (true)
+                    {
+                        int connectedNodeNumber = GetRandomNumber(1, numberOfNodes + 1);
+                        edge.Destination = userNodes.FirstOrDefault(x => x.Name == $"N{connectedNodeNumber}");
+                        if (item != edge.Destination && destinations.All(x => x.Destination != edge.Destination))
+                            break;
+                    }
+
+                    edge.Cost = cost;
+                    destinations.Add(edge);
+                }
+                item.Destinations = destinations.ToArray();
+            }
+
         }
 
         private void CheckIncomingNodes()
@@ -219,7 +317,7 @@ namespace StartupMenu
             for (int i = 0; i < resultRoute.Count - 1; i++)
             {
                 Edge actualEdge = resultRoute[i].Destinations.FirstOrDefault(x => x.Destination.Name == resultRoute[i + 1].Name);
-                actualEdge.Cost++;
+                actualEdge.Cost.InitialValue++;
             }
         }
 
@@ -265,6 +363,7 @@ namespace StartupMenu
                 for (int i = 0; i < numberOfEdges; i++)
                 {
                     Edge edge = new Edge() { };
+                    Cost cost = new Cost() { };
 
                     while (true)
                     {
@@ -274,8 +373,9 @@ namespace StartupMenu
                             break;
                     }
 
-                    double costInput = GetRandomNumber(1, 11);
-                    edge.Cost = costInput;
+                    int costInput = GetRandomNumber(1, 11);
+                    cost.InitialValue = costInput;
+                    edge.Cost = cost;
                     destinations.Add(edge);
                 }
                 item.Destinations = destinations.ToArray();
@@ -285,21 +385,69 @@ namespace StartupMenu
 
         private void CheckBestRoute()
         {
+            int numberOfNodes = Graph.Nodes.Count();
 
-            if (Graph.Nodes == null || Graph.Nodes.Count() == 0)
+            string inputStartNode;
+            string inputEndNode;
+            List<RouterResult> shortestPath = new List<RouterResult>();
+            string routeString = "";
+            string pathCostString = "";
+            string inner = "";
+
+            Stopwatch sw = Stopwatch.StartNew();
+
+            if (Graph.Nodes != null || Graph.Nodes.Count() != 0)
             {
-                Console.WriteLine("There is currently no existing DAG. You need to define a DAG or import a DAG from file!");
-            }
-            else
-            {
+                
                 Console.WriteLine("Please enter a startNode");
-                string inputStartNode = Console.ReadLine();
+                inputStartNode = Console.ReadLine();
                 Console.WriteLine("Please enter an endNode");
-                string inputEndNode = Console.ReadLine();
+                inputEndNode = Console.ReadLine();
 
                 var factory = new LayoutFactory(Graph);
                 var router = new Router(factory);
-                List<RouterResult> shortestPath = router.GetShortestPathDijkstra(inputStartNode, inputEndNode);
+
+                Stopwatch swInner = Stopwatch.StartNew();
+
+                try
+                {
+                    shortestPath = router.GetShortestPathDijkstra(inputStartNode, inputEndNode);
+                }
+                catch (Exception ex)
+                {
+                    inner = ex.Message;
+                    Console.WriteLine(inner);
+                    Console.WriteLine(ex.StackTrace);
+                }
+
+                if (shortestPath.Count > 0)
+                {
+                    foreach (var item in shortestPath)
+                    {
+                        routeString += item.NodeName + "-";
+                        pathCostString += item.ShortestPathValue + "-";
+                    }
+                    string choppedRouteString = routeString.Remove(routeString.Length - 1, 1);
+                    string choppedpathCostString = pathCostString.Remove(pathCostString.Length - 1, 1);
+                    Console.WriteLine($"Routecalculation result\nTime taken for iteration: {swInner.ElapsedMilliseconds}ms\n" +
+                        $"StartNode = {inputStartNode}\nEndNode = {inputEndNode}\nShortest path: {choppedRouteString}\n" +
+                        $"PathCost: {choppedpathCostString}\nNumber of visited Nodes: {router.NodeVisits}\n" +
+                        $"ShortestPathCost: {router.ShortestPathCost}\n");
+                }
+                else
+                {
+                    log.Debug($"{inner}");
+                }
+                swInner.Stop();
+
+                Console.WriteLine($"Number of Nodes in Graph: {numberOfNodes}\nTotal time for iteration(ms): {sw.ElapsedMilliseconds}\n");
+
+                Console.WriteLine();
+                Console.WriteLine("Test done!");
+                Console.WriteLine();
+
+
+
 
                 Console.WriteLine($"Number of nodes visited: {router.NodeVisits}");
                 Console.WriteLine();
@@ -310,6 +458,13 @@ namespace StartupMenu
                     Console.WriteLine($"{item.NodeName}");
                 }
             }
+
+            else
+            {
+                Console.WriteLine("There is currently no existing DAG. You need to define a DAG or import a DAG from file!");
+            }
+
+            sw.Stop();
         }
 
         private void SeeAll()
@@ -372,10 +527,12 @@ namespace StartupMenu
                     if (nodeInput != string.Empty && AllDefinedNodes().Contains(nodeInput))
                     {
                         Edge edge = new Edge() { };
+                        Cost cost = new Cost() { };
                         edge.Destination = userNodes.FirstOrDefault(x => x.Name == nodeInput);
                         Console.WriteLine($"Specify cost for the connection between {item.Name} and {nodeInput}: ");
                         costInput = Console.ReadLine();
-                        edge.Cost = Int32.Parse(costInput);
+                        cost.InitialValue = Int32.Parse(costInput);
+                        edge.Cost = cost;
 
                         destinations = destinations.Concat(new Edge[] { edge }).ToArray();
                     }
@@ -421,7 +578,7 @@ namespace StartupMenu
                             edge.Destination = userNodes.FirstOrDefault(x => x.Name == nodeToInput);
                             Console.WriteLine($"Specify cost for the connection between {node.Name} and {nodeToInput}: ");
                             costInput = Console.ReadLine();
-                            edge.Cost = Int32.Parse(costInput);
+                            edge.Cost.InitialValue = Int32.Parse(costInput);
 
                             destinations = destinations.Concat(new Edge[] { edge }).ToArray();
 
@@ -463,7 +620,7 @@ namespace StartupMenu
             Console.WriteLine();
             foreach (Edge edge in selectedNode.Destinations)
             {
-                Console.WriteLine($"Connection to {edge.Destination.Name} at Cost of {edge.Cost.ToString()}");
+                Console.WriteLine($"Connection to {edge.Destination.Name} at Cost of {edge.Cost.InitialValue.ToString()}");
 
             }
             string selectedAction = ShowMenu("Select what you want to do.", new[] {
@@ -496,7 +653,7 @@ namespace StartupMenu
                     edge.Destination = userNodes.FirstOrDefault(x => x.Name == nodeInput);
                     Console.WriteLine($"Specify cost for the connection between {selectedNode.Name} and {nodeInput}: ");
                     costInput = Console.ReadLine();
-                    edge.Cost = Int32.Parse(costInput);
+                    edge.Cost.InitialValue = Int32.Parse(costInput);
 
                     destinations = destinations.Concat(new Edge[] { edge }).ToArray();
                 }
@@ -520,7 +677,7 @@ namespace StartupMenu
 
             foreach (Edge edge in destinations)
             {
-                Console.WriteLine($"Connection to {edge.Destination.Name} at Cost of {edge.Cost.ToString()}");
+                Console.WriteLine($"Connection to {edge.Destination.Name} at Cost of {edge.Cost.InitialValue.ToString()}");
             }
 
             while (true)
@@ -534,7 +691,7 @@ namespace StartupMenu
 
                     Console.WriteLine($"Specify new cost for the connection between {selectedNode.Name} and {nodeInput}: ");
                     string costInput = Console.ReadLine();
-                    actualEdge.Cost = Int32.Parse(costInput);
+                    actualEdge.Cost.InitialValue = Int32.Parse(costInput);
                 }
                 else if (nodeInput != string.Empty && !AllDefinedNodes().Contains(nodeInput))
                 {
@@ -563,7 +720,7 @@ namespace StartupMenu
                 List<string> destinations = new List<string>();
                 foreach (Edge edge in item.Destinations)
                 {
-                    string edgeCost = edge.Cost.ToString();
+                    string edgeCost = edge.Cost.InitialValue.ToString();
                     string edgeDestination = edge.Destination.Name.ToString();
                     destinations.Add($"{edgeCost},{edgeDestination}");
                 }
@@ -632,7 +789,9 @@ namespace StartupMenu
                 {
                     string[] parts = item.Split(',');
                     Edge edge = new Edge() { };
-                    edge.Cost = Int32.Parse(parts[0]);
+                    Cost cost = new Cost() { };
+                    cost.InitialValue = Int32.Parse(parts[0]);
+                    edge.Cost = cost;
                     edge.Destination = userNodes.FirstOrDefault(x => x.Name == parts[1]);
                     destinations = destinations.Concat(new Edge[] { edge }).ToArray();
                 }

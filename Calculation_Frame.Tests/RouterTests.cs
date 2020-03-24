@@ -6,21 +6,24 @@ using System.Threading.Tasks;
 using Calculation;
 using Layout_FrameMenu;
 using Xunit;
+using Moq;
 
 namespace Calculation_Frame.Tests
 {
+    
     public class RouterTests
     {
-        private readonly Router _sut;
-
-        private readonly ILayoutFactory _layoutFactoryMock;
-
         private readonly Graph Graph;
+        private readonly Router _sut;
+        ILayoutFactory _layoutFactoryMock;
+
 
         public RouterTests()
         {
             _layoutFactoryMock = new LayoutFactoryMock();
+
             _sut = new Router(_layoutFactoryMock);
+
             Graph = _layoutFactoryMock.GetLayout();
         }
 
@@ -32,6 +35,7 @@ namespace Calculation_Frame.Tests
         public void ShortestPathDijkstra_ListOfStringShouldContainSomeGivenNodes_Theory(string expected, string startNode, string endNode)
         {
             // Arrange
+            
             List<string> nodesAsStrings = new List<string>();
 
             // Act
@@ -45,15 +49,41 @@ namespace Calculation_Frame.Tests
             Assert.Contains(expected, nodesAsStrings);
         }
 
+        //[Fact]
+        //public void ShortestPathDijkstra_ErrorMessageShouldBeTrownIfEndpointIsIsland()
+        //{
+        //    //Arrange
+            
+        //    string startNode = "N1";
+        //    string endNode = "N10";
+        //    //Act
+
+        //    //Assert
+        //    Assert.Throws<ArgumentException>(() => _sut.GetShortestPathDijkstra(startNode, endNode));
+        //}
+
         [Fact]
         public void RouterConstructor_ErrorMessageShouldbeThrownIfGraphIsNull()
         {
             //Arrange
+            Graph graph = new Graph();
+            
+
+            var nullMock = new Mock<ILayoutFactory>();
+            nullMock.Setup(nm => nm.GetLayout()).Returns(graph);
+            _layoutFactoryMock = nullMock.Object;
+
+
+
 
             //Act
-
+            var vm = new Router(_layoutFactoryMock);
             //Assert
+            Assert.Throws<ArgumentException>(() => new Router(_layoutFactoryMock));
+            //
         }
+
+
 
 
     }
