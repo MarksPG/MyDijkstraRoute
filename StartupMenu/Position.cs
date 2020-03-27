@@ -14,7 +14,7 @@ namespace StartupMenu
 
             public string ToPosition { get; set; }
 
-            public virtual List<CostData> Costs { get; set; }
+            public virtual ICollection<CostData> Costs { get; set; }
         }
     
 }

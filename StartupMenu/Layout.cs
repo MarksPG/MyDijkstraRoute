@@ -3,9 +3,12 @@ using Layout_FrameMenu;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Data.Entity;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+
+
 
 [assembly: log4net.Config.XmlConfigurator(Watch = true)]
 
@@ -22,7 +25,7 @@ namespace StartupMenu
 
         private static readonly Random getrandom = new Random();
 
-        const string NodeFilePathIn = @"C:\Windows\Temp\TestForNewEdge.json";
+        const string NodeFilePathIn = @"C:\Windows\Temp\GrundGraf.json";
         const string NodeFilePathOut = @"C:\Windows\Temp\RGLayout_out.json";
 
         public void Run()
@@ -38,8 +41,10 @@ namespace StartupMenu
                         "Save existing DAG to file",
                         "Save existing DAG to database",
                         "Import new DAG from file",
+                        "Find cost for a specific Edge in graph",
                         "Automatic DAG with variable edge Cost",
                         "Check best route through calculation",
+                        "Check best route with extended Cost",
                         "Run iterative calculations through DAG",
                         "Run performancetest",
                         
@@ -56,16 +61,168 @@ namespace StartupMenu
                 else if (option == "Save existing DAG to file") SaveExistingDAG();
                 else if (option == "Save existing DAG to database") SaveToDatabase();
                 else if (option == "Import new DAG from file") ImportNewDAG();
+                else if (option == "Find cost for a specific Edge in graph") FindCostforEdge();
                 else if (option == "Automatic DAG with variable edge Cost") CreateDAGWithVariableEdge();
                 else if (option == "Check best route through calculation") CheckBestRoute();
+                else if (option == "Check best route with extended Cost") CheckWithVariableCost();
                 else if (option == "Run iterative calculations through DAG") RunIterative();
-
                 else if (option == "Run performancetest") RunPerformanceTest();
                 else if (option == "Find all Nodes that connect to a specific Node in DAG") CheckIncomingNodes();
                 else Environment.Exit(0);
 
                 Console.WriteLine();
             }
+        }
+
+        private void CheckWithVariableCost()
+        {
+            if (Graph.Nodes == null || Graph.Nodes.Count() == 0)
+            {
+                Console.WriteLine("There is currently no existing DAG. You need to define a DAG or import a DAG from file!");
+            }
+            else
+            {
+                UpdateAllEdgeCosts();
+
+            }
+        }
+        
+        private void UpdateAllEdgeCosts()
+        {
+            List<Node> userNodes = Graph.Nodes;
+
+            foreach (var item in userNodes)
+            {
+                var c = GetCostsInDatabase(item.Name, item.Destinations.Select(d => d.Destination.Name).ToArray());
+                var costList = c.ToList();
+
+                for (int i = 0; i < c.Count(); i++)
+                {
+                    int costSum = costList[i].Distance + costList[i].DownTime + costList[i].EmergencyStop + costList[i].Occupancy + costList[i].Speed;
+
+                    item.Destinations[i].Cost.InitialValue = costSum;
+                }
+            }
+        }
+
+        private void UpdateAllEdgeCostsTotalLoading()
+        {
+            List<Node> userNodes = Graph.Nodes;
+            var edges = GetCostsInDatabaseTotal();
+
+
+            foreach (Node node in userNodes)
+            {
+                foreach (var item in node.Destinations)
+                {
+                    List<CostData> hupps = edges.FirstOrDefault(p => p.FromPosition == node.Name && p.ToPosition == item.Destination.Name).Costs.ToList();
+
+                    int sum = hupps[0].Distance + hupps[0].DownTime + hupps[0].EmergencyStop + hupps[0].Occupancy + hupps[0].Speed;
+                    item.Cost.InitialValue = sum;
+                }
+                
+            }
+            
+
+        }
+
+        private void UpdateAllEdgeCostsTotalLoading2()
+        {
+            List<Node> userNodes = Graph.Nodes;
+            using (var conn = new System.Data.SqlClient.SqlConnection("Server=.\\SQLEXPRESS;Database=LIA2Routing_1;Integrated Security=True;"))
+            {
+                conn.Open();
+                var command = conn.CreateCommand();
+                command.CommandText = "select p.fromposition, p.toposition, c.Occupancy, c.EmergencyStop, c.Speed, c.Distance, c.DownTime from positions p join costdatas c on p.positionid = c.positionid";
+                using (var reader = command.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        //var edge = userNodes.FirstOrDefault(n => n.Name == reader.GetString(0))?.Destinations.FirstOrDefault(d => d.Destination.Name == reader.GetString(1));
+                        //int sum = reader.GetInt32(2) + reader.GetInt32(3) + reader.GetInt32(4) + reader.GetInt32(5) + reader.GetInt32(6);
+                        //edge.Cost.InitialValue = sum;
+
+                        foreach (Node node in userNodes)
+                        {
+                            if(node.Name == reader.GetString(0))
+                            {
+                                for (int i = 0; i < node.Destinations.Length; i++)
+                                {
+                                    if(node.Destinations[i].Destination.Name == reader.GetString(1))
+                                    {
+                                        int sum = reader.GetInt32(2) + reader.GetInt32(3) + reader.GetInt32(4) + reader.GetInt32(5) + reader.GetInt32(6);
+                                        node.Destinations[i].Cost.InitialValue = sum;
+                                    }
+                                }
+                            }
+                            
+                        }
+                    }
+                }
+            }
+        }
+
+        private void FindCostforEdge()
+        {
+
+
+            if (Graph.Nodes == null || Graph.Nodes.Count() == 0)
+            {
+                Console.WriteLine("There is currently no existing DAG. You need to define a DAG or import a DAG from file!");
+            }
+            else
+            {
+                List<Node> userNodes = Graph.Nodes;
+                Console.Clear();
+                Console.WriteLine("Please, specify Node for calculation");
+                string nodeInput = Console.ReadLine();
+                Node selectedNode = userNodes.FirstOrDefault(x => x.Name == nodeInput);
+
+                Console.WriteLine($"The selected node {selectedNode.Name} has {selectedNode.Destinations.Length} connection/s");
+                Console.WriteLine();
+
+                var c = GetCostsInDatabase(nodeInput, selectedNode.Destinations.Select(d => d.Destination.Name).ToArray());
+                var costList = c.ToList();
+
+                for (int i = 0; i < c.Count(); i++)
+                {
+                    string destination = selectedNode.Destinations[i].Destination.Name;
+                    int costSum = costList[i].Distance + costList[i].DownTime + costList[i].EmergencyStop + costList[i].Occupancy + costList[i].Speed;
+
+
+
+                    Console.WriteLine($"Connection to Node {destination} at a total cost of {costSum}");
+                }
+                
+                
+                
+
+            }
+
+        }
+
+        private IEnumerable<CostData> GetCostsInDatabase(string nodeInput, string[] destination)
+        {
+            CostData[] costs;
+
+            using (var db = new LayoutContext())
+            {
+                costs = db.CostData.Where(cd => cd.Position.FromPosition == nodeInput && destination.Contains(cd.Position.ToPosition)).AsNoTracking().ToArray();
+                //db.Positions.FirstOrDefault(x => x.FromPosition == nodeInput && x.ToPosition == destination).Costs;
+            }
+            return costs;
+        }
+
+        private IEnumerable<Position> GetCostsInDatabaseTotal()
+        {
+            Position[] all;
+
+            using (var db = new LayoutContext())
+            {
+                all = db.Positions.Include(p => p.Costs).AsNoTracking().ToArray();
+                //db.Positions.FirstOrDefault(x => x.FromPosition == nodeInput && x.ToPosition == destination).Costs;
+            }
+            return all;
         }
 
         private void SaveToDatabase()
@@ -96,7 +253,7 @@ namespace StartupMenu
                                 ToPosition = userNodes[i].Destinations[k].Destination.Name,
                                 Costs = costDatas
                             };
-                            position.Costs[0].Distance = (userNodes[i].Destinations[k].Cost.InitialValue).GetValueOrDefault();
+                            //position.Costs[0].Distance = (userNodes[i].Destinations[k].Cost.InitialValue).GetValueOrDefault();
                             db.Positions.Add(position);
                             counter++;
                         }
@@ -189,7 +346,7 @@ namespace StartupMenu
 
         private void RunPerformanceTest()
         {
-            AutomaticallyCreateDAG();
+            //AutomaticallyCreateDAG();
             int numberOfNodes = Graph.Nodes.Count();
             //int numberOfEdges = Graph.Nodes[0].Destinations.Length;
 
@@ -222,6 +379,7 @@ namespace StartupMenu
 
                 try
                 {
+                    UpdateAllEdgeCostsTotalLoading2();
                     shortestPath = router.GetShortestPathDijkstra(inputStartNode, inputEndNode);
                 }
                 catch (Exception ex)
@@ -403,6 +561,7 @@ namespace StartupMenu
                 inputStartNode = Console.ReadLine();
                 Console.WriteLine("Please enter an endNode");
                 inputEndNode = Console.ReadLine();
+                UpdateAllEdgeCosts();
 
                 var factory = new LayoutFactory(Graph);
                 var router = new Router(factory);
