@@ -128,11 +128,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CostData.cs" />
     <Compile Include="Layout.cs" />
     <Compile Include="LayoutContext.cs" />
     <Compile Include="LayoutFactory.cs" />
-    <Compile Include="Position.cs" />
+    <Compile Include="CostModel.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

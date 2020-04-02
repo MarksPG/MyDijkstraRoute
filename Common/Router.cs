@@ -68,7 +68,7 @@ namespace Calculation
                 RouterResult routerResult = new RouterResult()
                 {
                     NodeName = shortestPath[i].Name,
-                    ShortestPathValue = shortestPath[i].Destinations.FirstOrDefault(x => x.Destination.Name == shortestPath[i + 1].Name).Cost.InitialValue
+                    ShortestPathValues = shortestPath[i].Destinations.FirstOrDefault(x => x.Destination.Name == shortestPath[i + 1].Name).AllCosts
                 };
                 result.Add(routerResult);
                 i++;
@@ -76,7 +76,7 @@ namespace Calculation
             RouterResult routerResult2 = new RouterResult()
             {
                 NodeName = shortestPath[i].Name,
-                ShortestPathValue = 0
+                ShortestPathValues = new List<Cost>(new Cost[] { new Cost() { CostName = "Endpoint", Value = 0 } })
             };
             result.Add(routerResult2);
 
@@ -113,7 +113,8 @@ namespace Calculation
                 CalcNode calcNode = routingstate.PrioQueue.First();
                 routingstate.PrioQueue.Remove(calcNode);
 
-                foreach (var cnn in calcNode.Destinations.OrderBy(x => x.Cost.InitialValue))
+                foreach(var cnn in calcNode.Destinations.OrderBy(x => x.AllCosts.Sum(v => v.Value)))
+                //foreach (var cnn in calcNode.Destinations.OrderBy(x => x.AllCosts[0].Value))
                 {
                     var childNode = routingstate.GetNode(cnn.Destination.Name);
                     if (childNode == null) { childNode = new CalcNode(cnn.Destination); }
@@ -122,9 +123,9 @@ namespace Calculation
                     if (routingstate.Visited.Contains(childNode))
                         continue;
                     if (childNode.MinCostToStart == null ||
-                        calcNode.MinCostToStart + cnn.Cost.InitialValue < childNode.MinCostToStart)
+                        calcNode.MinCostToStart + cnn.AllCosts[0].Value < childNode.MinCostToStart)
                     {
-                        childNode.MinCostToStart = calcNode.MinCostToStart + cnn.Cost.InitialValue;
+                        childNode.MinCostToStart = calcNode.MinCostToStart + cnn.AllCosts.Sum(v => v.Value);
                         childNode.NearestToStart = calcNode;
                         if (!routingstate.PrioQueue.Contains(childNode))
                             routingstate.PrioQueue.Add(childNode);

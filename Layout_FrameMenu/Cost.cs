@@ -8,9 +8,8 @@ namespace Layout_FrameMenu
 {
     public class Cost
     {
-        public int? InitialValue { get; set; } = 1;
+        public string CostName { get; set; }
 
-        public ICollection<CostData> Costs;
-
+        public int Value { get; set; }
     }
 }

@@ -9,7 +9,9 @@ namespace StartupMenu
 {
     public class LayoutContext : DbContext
     {
-        public DbSet<Position> Positions { get; set; }
-        public DbSet<CostData> CostData { get; set; }
+        public DbSet<CostModel> Costs { get; set; }
+
+        //[Obsolete]
+        //public DbSet<CostData> CostData { get; set; }
     }
 }

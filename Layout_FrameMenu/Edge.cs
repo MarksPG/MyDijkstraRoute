@@ -6,11 +6,10 @@ namespace Layout_FrameMenu
 {
     public class Edge
     {
-        public Cost Cost { get; set; }
-
         public Node FromNode { get; set; }
 
         public Node Destination { get; set; }
 
+        public List<Cost> AllCosts { get; set; }
     }
 }
