@@ -10,7 +10,6 @@ namespace Layout_FrameMenu
 
         public List<Node> Nodes { get; set; } = new List<Node>();
 
-        
-
+        public Dictionary<string, Dictionary<string, int>> Positions { get; set; }
     }
 }

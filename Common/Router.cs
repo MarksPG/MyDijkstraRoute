@@ -26,7 +26,7 @@ namespace Calculation
 
             Graph = lf.GetLayout();
 
-            if(Graph.Nodes.Count == 0)
+            if (Graph.Nodes.Count == 0)
             {
                 throw new ArgumentException("A graph does not exist, or has not been properly instantiated");
             }
@@ -35,7 +35,9 @@ namespace Calculation
 
         public List<RouterResult> GetShortestPathDijkstra(string startNode, string endNode)
         {
-            if(startNode == endNode)
+            UpdateAllEdgeCostsFromPositionsDictionary();
+
+            if (startNode == endNode)
             {
                 throw new ArgumentException("Router can not process route calculation for endNode similar to startNode!");
             }
@@ -146,6 +148,27 @@ namespace Calculation
             
             //ShortestPathCost += calcNode.Destinations.Single(x => x.Destination.Name == calcNode.NearestToStart.Name).Cost;
             BuildShortestPath(list, calcNode.NearestToStart);
+        }
+
+        private void UpdateAllEdgeCostsFromPositionsDictionary()
+        {
+            foreach (Node node in Graph.Nodes)
+            {
+                for (int i = 0; i < node.Destinations.Length; i++)
+                {
+                    string keyValue = $"{node.Name},{node.Destinations[i].Destination.Name}";
+                    node.Destinations[i].AllCosts.Clear();
+                    foreach (KeyValuePair<string, int> costs in Graph.Positions[keyValue])
+                    {
+                        Cost cost = new Cost()
+                        {
+                            CostName = costs.Key,
+                            Value = costs.Value
+                        };
+                        node.Destinations[i].AllCosts.Add(cost);
+                    }
+                }
+            }
         }
 
     }
