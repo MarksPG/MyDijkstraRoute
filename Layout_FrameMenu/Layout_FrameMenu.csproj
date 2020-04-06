@@ -49,7 +49,7 @@
     <Compile Include="Cost.cs" />
     <Compile Include="Edge.cs" />
     <Compile Include="Graph.cs" />
-    <Compile Include="IGraph.cs" />
+    <Compile Include="ICostCalculator.cs" />
     <Compile Include="ILayoutFactory.cs" />
     <Compile Include="Node.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

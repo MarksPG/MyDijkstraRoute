@@ -35,7 +35,7 @@ namespace Calculation
 
         public List<RouterResult> GetShortestPathDijkstra(string startNode, string endNode)
         {
-            UpdateAllEdgeCostsFromPositionsDictionary();
+            Graph.UpdateAllEdgeCostsFromPositionsDictionary();
 
             if (startNode == endNode)
             {
@@ -148,27 +148,6 @@ namespace Calculation
             
             //ShortestPathCost += calcNode.Destinations.Single(x => x.Destination.Name == calcNode.NearestToStart.Name).Cost;
             BuildShortestPath(list, calcNode.NearestToStart);
-        }
-
-        private void UpdateAllEdgeCostsFromPositionsDictionary()
-        {
-            foreach (Node node in Graph.Nodes)
-            {
-                for (int i = 0; i < node.Destinations.Length; i++)
-                {
-                    string keyValue = $"{node.Name},{node.Destinations[i].Destination.Name}";
-                    node.Destinations[i].AllCosts.Clear();
-                    foreach (KeyValuePair<string, int> costs in Graph.Positions[keyValue])
-                    {
-                        Cost cost = new Cost()
-                        {
-                            CostName = costs.Key,
-                            Value = costs.Value
-                        };
-                        node.Destinations[i].AllCosts.Add(cost);
-                    }
-                }
-            }
         }
 
     }

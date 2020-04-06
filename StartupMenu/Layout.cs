@@ -371,37 +371,37 @@ namespace StartupMenu
 
        
         
-        private void UpdateAllEdgeCostsTotalLoading3()
-        {
-            using (var conn = new System.Data.SqlClient.SqlConnection("Server=.\\SQLEXPRESS;Database=LIA2Routing_3;Integrated Security=True;"))
-            {
-                conn.Open();
-                var command = conn.CreateCommand();
-                //command.CommandText = "select p.fromposition, p.toposition, c.Occupancy, c.EmergencyStop, c.Speed, c.Distance, c.DownTime from positions p join costdatas c on p.positionid = c.positionid";
-                command.CommandText = "select cm.FromPosition, cm.ToPosition, cm.CostName, cm.Value from CostModels cm";
+        //private void UpdateAllEdgeCostsTotalLoading3()
+        //{
+        //    using (var conn = new System.Data.SqlClient.SqlConnection("Server=.\\SQLEXPRESS;Database=LIA2Routing_3;Integrated Security=True;"))
+        //    {
+        //        conn.Open();
+        //        var command = conn.CreateCommand();
+        //        //command.CommandText = "select p.fromposition, p.toposition, c.Occupancy, c.EmergencyStop, c.Speed, c.Distance, c.DownTime from positions p join costdatas c on p.positionid = c.positionid";
+        //        command.CommandText = "select cm.FromPosition, cm.ToPosition, cm.CostName, cm.Value from CostModels cm";
 
-                using (var reader = command.ExecuteReader())
-                {
-                    while (reader.Read())
-                    {
-                        var keyString = $"{reader.GetString(0)},{reader.GetString(1)}";
+        //        using (var reader = command.ExecuteReader())
+        //        {
+        //            while (reader.Read())
+        //            {
+        //                var keyString = $"{reader.GetString(0)},{reader.GetString(1)}";
 
-                        if (Graph.Positions.ContainsKey(keyString))
-                        {
-                            var x = Graph.Positions[keyString];
-                            if(x.ContainsKey(reader.GetString(2)))
-                            {
-                                x[reader.GetString(2)] = int.Parse(reader.GetString(3));
-                            }
-                            else
-                            {
-                                x.Add(reader.GetString(2), int.Parse(reader.GetString(3)));
-                            }
-                        }
-                    }
-                }
-            }
-        }
+        //                if (Graph.Positions.ContainsKey(keyString))
+        //                {
+        //                    var x = Graph.Positions[keyString];
+        //                    if(x.ContainsKey(reader.GetString(2)))
+        //                    {
+        //                        x[reader.GetString(2)] = int.Parse(reader.GetString(3));
+        //                    }
+        //                    else
+        //                    {
+        //                        x.Add(reader.GetString(2), int.Parse(reader.GetString(3)));
+        //                    }
+        //                }
+        //            }
+        //        }
+        //    }
+        //}
 
 
         private void FindCostforEdge()
@@ -621,7 +621,8 @@ namespace StartupMenu
 
                 try
                 {
-                    UpdateAllEdgeCostsTotalLoading3();
+                    ICostCalculator ccf = new CostCalculator();
+                    ccf.UpdateCosts(Graph);
                     shortestPath = router.GetShortestPathDijkstra(inputStartNode, inputEndNode);
                 }
                 catch (Exception ex)
@@ -758,7 +759,8 @@ namespace StartupMenu
                 
                 try
                 {
-                    UpdateAllEdgeCostsTotalLoading3();
+                    ICostCalculator ccf = new CostCalculator();
+                    ccf.UpdateCosts(Graph);
                     shortestPath = router.GetShortestPathDijkstra(inputStartNode, inputEndNode);
                 }
                 catch (Exception ex)
