@@ -149,6 +149,10 @@
       <Project>{d4616176-6ef5-4deb-b980-eeeaf03d2a36}</Project>
       <Name>Layout_FrameMenu</Name>
     </ProjectReference>
+    <ProjectReference Include="..\RG Automotive_Test Implementation\RG Automotive_Test Implementation.csproj">
+      <Project>{20E3492B-63BD-4792-865D-55B601F84895}</Project>
+      <Name>RG Automotive_Test Implementation</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

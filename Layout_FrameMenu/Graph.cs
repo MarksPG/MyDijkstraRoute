@@ -10,10 +10,10 @@ namespace Layout_FrameMenu
 
         public List<Node> Nodes { get; set; } = new List<Node>();
 
-        public Dictionary<string, Dictionary<string, int>> Positions { get; set; }
+        public Dictionary<string, Dictionary<string, int>> Positions { get; set; } = new Dictionary<string, Dictionary<string, int>>();
 
 
-        public void UpdateAllEdgeCostsFromPositionsDictionary()
+        public void UpdateCostsFromPositionsDictionary()
         {
             foreach (Node node in Nodes)
             {

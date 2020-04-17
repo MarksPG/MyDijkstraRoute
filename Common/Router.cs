@@ -31,11 +31,16 @@ namespace Calculation
                 throw new ArgumentException("A graph does not exist, or has not been properly instantiated");
             }
         }
-
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="startNode"></param>
+        /// <param name="endNode"></param>
+        /// <returns></returns>
 
         public List<RouterResult> GetShortestPathDijkstra(string startNode, string endNode)
         {
-            Graph.UpdateAllEdgeCostsFromPositionsDictionary();
+            Graph.UpdateCostsFromPositionsDictionary();
 
             if (startNode == endNode)
             {

@@ -1,15 +1,16 @@
-﻿using System;
+﻿using Layout_FrameMenu;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Layout_FrameMenu
+namespace RG_Automotive_Test_Implementation
 {
-    class CostCalculator : ICostCalculator
+    class CostCalculatorRG : ICostCalculator
     {
         private Graph _graph;
-        
+
         public void UpdateCosts(Graph graph)
         {
             using (var conn = new System.Data.SqlClient.SqlConnection("Server=.\\SQLEXPRESS;Database=LIA2_RGAutomotiveTest;Integrated Security=True;"))
@@ -24,9 +25,9 @@ namespace Layout_FrameMenu
                     {
                         var keyString = $"{reader.GetString(0)},{reader.GetString(1)}";
 
-                        if (graph.Positions.ContainsKey(keyString))
+                        if (_graph.Positions.ContainsKey(keyString))
                         {
-                            var x = graph.Positions[keyString];
+                            var x = _graph.Positions[keyString];
                             if (x.ContainsKey(reader.GetString(2)))
                             {
                                 x[reader.GetString(2)] = int.Parse(reader.GetString(3));

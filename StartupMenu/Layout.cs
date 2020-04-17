@@ -1,6 +1,7 @@
 ﻿using Calculation;
 using Layout_FrameMenu;
 using Newtonsoft.Json;
+using RG_Automotive_Test_Implementation;
 using System;
 using System.Collections.Generic;
 using System.Data.Entity;
@@ -41,6 +42,7 @@ namespace StartupMenu
                         "Save existing DAG to file",
                         "Save existing DAG to database",
                         "Import new DAG from file",
+                        "Import RG Automotive",
                         "Find cost for a specific Edge in graph",
                         "Automatic DAG with variable edge Cost",
                         "Check best route through calculation",
@@ -60,6 +62,7 @@ namespace StartupMenu
                 else if (option == "Save existing DAG to file") SaveExistingDAG();
                 else if (option == "Save existing DAG to database") SaveToDatabase();
                 else if (option == "Import new DAG from file") ImportNewDAG();
+                else if (option == "Import RG Automotive") ImportRGAutomotive();
                 else if (option == "Find cost for a specific Edge in graph") FindCostforEdge();
                 else if (option == "Automatic DAG with variable edge Cost") CreateDAGWithVariableEdge();
                 else if (option == "Check best route through calculation") CheckBestRoute();
@@ -72,6 +75,11 @@ namespace StartupMenu
             }
         }
 
+        private void ImportRGAutomotive()
+        {
+            var rgFactory = new LayoutFactoryRG();
+            Graph = rgFactory.GetLayout();
+        }
 
         private void SeeAll()
         {
