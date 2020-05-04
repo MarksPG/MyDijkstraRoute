@@ -25,7 +25,7 @@ namespace RG_Automotive_Test_Implementation
         {
             Dictionary<string, Dictionary<string, int>> edges = new Dictionary<string, Dictionary<string, int>>();
 
-            using (var conn = new System.Data.SqlClient.SqlConnection("Server=DB2016\\SQL2016E;Database=RGAutomotive;User ID = elseware;Password = *******************;Connect Timeout = 30;Encrypt = False;TrustServerCertificate = False;ApplicationIntent = ReadWrite;MultiSubnetFailover = False"))
+            using (var conn = new System.Data.SqlClient.SqlConnection("Server=DB2016\\SQL2016E;Database=RGAutomotive;User ID = elseware;Password = elseware;Connect Timeout = 30;Encrypt = False;TrustServerCertificate = False;ApplicationIntent = ReadWrite;MultiSubnetFailover = False"))
             {
                 conn.Open();
                 var command = conn.CreateCommand();

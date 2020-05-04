@@ -1,6 +1,7 @@
 ﻿using Layout_FrameMenu;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -32,6 +33,8 @@ namespace Calculation
             }
         }
         /// <summary>
+        /// Given the names of the startNode and the endNode (final destination), this method will return the optimum way from startNode to EndNode as a
+        /// list of RouterResult. Initially the Cost for each Edge in the Graph provided, will be updated.
         /// 
         /// </summary>
         /// <param name="startNode"></param>
@@ -41,7 +44,7 @@ namespace Calculation
         public List<RouterResult> GetShortestPathDijkstra(string startNode, string endNode)
         {
             Graph.UpdateCostsFromPositionsDictionary();
-
+            
             if (startNode == endNode)
             {
                 throw new ArgumentException("Router can not process route calculation for endNode similar to startNode!");
@@ -75,7 +78,7 @@ namespace Calculation
                 RouterResult routerResult = new RouterResult()
                 {
                     NodeName = shortestPath[i].Name,
-                    ShortestPathValues = shortestPath[i].Destinations.FirstOrDefault(x => x.Destination.Name == shortestPath[i + 1].Name).AllCosts
+                    ShortestPathValues = shortestPath[i].Destinations.FirstOrDefault(x => x.Destination.Name == shortestPath[i + 1].Name).AllCosts,
                 };
                 result.Add(routerResult);
                 i++;
@@ -86,7 +89,6 @@ namespace Calculation
                 ShortestPathValues = new List<Cost>(new Cost[] { new Cost() { CostName = "Endpoint", Value = 0 } })
             };
             result.Add(routerResult2);
-
 
             return result;
         }
@@ -121,7 +123,6 @@ namespace Calculation
                 routingstate.PrioQueue.Remove(calcNode);
 
                 foreach(var cnn in calcNode.Destinations.OrderBy(x => x.AllCosts.Sum(v => v.Value)))
-                //foreach (var cnn in calcNode.Destinations.OrderBy(x => x.AllCosts[0].Value))
                 {
                     var childNode = routingstate.GetNode(cnn.Destination.Name);
                     if (childNode == null) { childNode = new CalcNode(cnn.Destination); }

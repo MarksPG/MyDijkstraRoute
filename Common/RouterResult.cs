@@ -13,6 +13,8 @@ namespace Calculation
 
         public List<Cost> ShortestPathValues { get; set; }
 
+        public string TimeStamp { get; set; }
+
     }
 
 

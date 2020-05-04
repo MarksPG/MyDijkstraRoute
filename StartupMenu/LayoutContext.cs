@@ -11,7 +11,5 @@ namespace StartupMenu
     {
         public DbSet<CostModel> Costs { get; set; }
 
-        //[Obsolete]
-        //public DbSet<CostData> CostData { get; set; }
     }
 }

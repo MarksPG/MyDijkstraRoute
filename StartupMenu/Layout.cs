@@ -758,17 +758,19 @@ namespace StartupMenu
                 inputStartNode = Console.ReadLine();
                 Console.WriteLine("Please enter an endNode");
                 inputEndNode = Console.ReadLine();
-
-
                 var factory = new LayoutFactory(Graph);
                 var router = new Router(factory);
 
+                
                 Stopwatch swInner = Stopwatch.StartNew();
                 
+
                 try
                 {
                     ICostCalculator ccf = new CostCalculator();
+                    
                     ccf.UpdateCosts(Graph);
+                    
                     shortestPath = router.GetShortestPathDijkstra(inputStartNode, inputEndNode);
                 }
                 catch (Exception ex)
@@ -803,6 +805,7 @@ namespace StartupMenu
                 swInner.Stop();
 
                 Console.WriteLine($"Number of Nodes in Graph: {numberOfNodes}\nTotal time for iteration(ms): {sw.ElapsedMilliseconds}\n");
+                
 
                 Console.WriteLine();
                 Console.WriteLine("Test done!");
@@ -816,7 +819,9 @@ namespace StartupMenu
                 foreach (var item in shortestPath)
                 {
                     Console.WriteLine($"{item.NodeName}");
+                    Console.WriteLine($"Time for Mirroring costs to NodeList: {item.TimeStamp}\n");
                 }
+                
             }
 
             else

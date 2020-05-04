@@ -62,26 +62,26 @@ namespace Calculation_Frame.Tests
         //    Assert.Throws<ArgumentException>(() => _sut.GetShortestPathDijkstra(startNode, endNode));
         //}
 
-        [Fact]
-        public void RouterConstructor_ErrorMessageShouldbeThrownIfGraphIsNull()
-        {
-            //Arrange
-            Graph graph = new Graph();
+        //[Fact]
+        //public void RouterConstructor_ErrorMessageShouldbeThrownIfGraphIsNull()
+        //{
+        //    //Arrange
+        //    Graph graph = new Graph();
             
 
-            var nullMock = new Mock<ILayoutFactory>();
-            nullMock.Setup(nm => nm.GetLayout()).Returns(graph);
-            _layoutFactoryMock = nullMock.Object;
+        //    var nullMock = new Mock<ILayoutFactory>();
+        //    nullMock.Setup(nm => nm.GetLayout()).Returns(graph);
+        //    _layoutFactoryMock = nullMock.Object;
 
 
 
 
-            //Act
-            var vm = new Router(_layoutFactoryMock);
-            //Assert
-            Assert.Throws<ArgumentException>(() => new Router(_layoutFactoryMock));
-            //
-        }
+        //    //Act
+        //    var vm = new Router(_layoutFactoryMock);
+        //    //Assert
+        //    Assert.Throws<ArgumentException>(() => new Router(_layoutFactoryMock));
+        //    //
+        //}
 
 
 
